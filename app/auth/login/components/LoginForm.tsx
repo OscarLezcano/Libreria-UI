@@ -7,6 +7,7 @@ import { useLogin } from '@/hooks/useAuth';
 import { User as UserIcon} from "lucide-react";
 import { Lock as LockIcon} from "lucide-react";
 import z from 'zod';
+import InputText from '@/components/InputText';
 
 export default function LoginForm() {
   const { mutate, isPending, isError, error } = useLogin();
@@ -28,23 +29,25 @@ export default function LoginForm() {
 
   return (
       <form action={handleSubmit}>
-        <div>
-            <label className="text-sm font-bold">Correo electrónico</label>
-            <label className="input mb-4 w-full">
-                <UserIcon size={20} className="opacity-50" />
-                <input placeholder="Usuario" name="username" type="text" defaultValue={"mor_2314"}/>
-            </label>
-            {/* {errors.username && <span>{errors.username}</span>} */}
-        </div>
+        <InputText
+          label="Correo electrónico"
+          name="username"
+          type="text"
+          placeholder="Usuario"
+          icon={<UserIcon size={20} className="opacity-50" />}
+          error={errors.username}
+          defaultValue="mor_2314"
+        />
 
-        <div>
-            <label className="text-sm font-bold">Contraseña</label>
-            <label className="input mb-4 w-full">
-                <LockIcon size={20} className="opacity-50 pr-1" />
-                <input placeholder="Contraseña" name="password" type="password" defaultValue={"83r5^_"}/>
-            </label>
-            {/* {errors.password && <span>{errors.password}</span>} */}
-        </div>
+        <InputText
+          label="Contraseña"
+          name="password"
+          type="password"
+          placeholder="Contraseña"
+          icon={<LockIcon size={20} className="opacity-50 pr-1" />}
+          error={errors.password}
+          defaultValue="83r5^_"
+        />
 
         {isError && <p>{error.message}</p>}
 
