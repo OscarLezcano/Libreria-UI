@@ -5,6 +5,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
+      data-theme="light"
     >
       <head>
         <link rel="icon" href="/icons/favicon.ico" />
