@@ -1,46 +1,21 @@
-'use client';
+import LoginForm from './components/LoginForm';
 
-import { useState } from 'react';
-import { loginInputSchema } from '@/schemas/auth/LoginInputSchema';
-import type { loginInputType } from '@/schemas/auth/LoginInputSchema';
-import { useLogin } from '@/hooks/useAuth';
-import z from 'zod';
-
-export default function LoginForm() {
-  const { mutate, isPending, isError, error } = useLogin();
-  const [errors, setErrors] = useState<Partial<loginInputType>>({});
-
-  function handleSubmit(formData: FormData) {
-    const validation = loginInputSchema.safeParse(Object.fromEntries(formData));
-    if (!validation.success) {
-      const fieldErrors = z.treeifyError(validation.error).properties;
-      setErrors({
-        username: fieldErrors?.username?.errors?.[0],
-        password: fieldErrors?.password?.errors?.[0],
-      });
-      return;
-    }
-    
-    mutate(validation.data);
-  }
-
+export default function LoginPage() {
   return (
-    <form action={handleSubmit}>
-      <div>
-        <input placeholder="Usuario" className="input" name="username" type="text" defaultValue={"mor_2314"}/>
-        {errors.username && <span>{errors.username}</span>}
+    <div className="flex min-h-screen">
+      <div id="left" className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-md p-4">
+          <h1 className="text-2xl font-bold mb-2">Bienvenido de nuevo</h1>
+          <p className="text-gray-600 mb-4">Ingresá a tu cuenta para comprar y alquilar libros electrónicos.</p>
+          <LoginForm />
+          <div className="mt-4 flex items-center justify-center">
+            <p className="text-gray-600 text-sm">¿No tienes una cuenta?  <a href="/register" className="link link-primary">Regístrate aquí</a></p>
+          </div>
+        </div>
       </div>
+      <div id="right" className="flex-1/10 bg-gray-100">
 
-      <div>
-        <input placeholder="Contraseña" className="input" name="password" type="password" defaultValue={"83r5^_"}/>
-        {errors.password && <span>{errors.password}</span>}
       </div>
-
-      {isError && <p>{error.message}</p>}
-
-      <button className="btn" type="submit" disabled={isPending}>
-        {isPending ? 'Ingresando...' : 'Entrar'}
-      </button>
-    </form>
+    </div>
   );
 }
