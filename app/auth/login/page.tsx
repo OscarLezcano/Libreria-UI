@@ -1,4 +1,6 @@
 import LoginForm from './components/LoginForm';
+import Image from "next/image";
+import LoginImage from "./assets/login-image.png";
 
 export default function LoginPage() {
   return (
@@ -13,8 +15,8 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      <div id="right" className="flex-1/10 bg-gray-100">
-
+      <div id="right" className="flex-1/10 bg-gray-100 relative">
+        <Image src={LoginImage} alt="Hello World" fill loading="eager" sizes="50vw" className="object-cover" />
       </div>
     </div>
   );
