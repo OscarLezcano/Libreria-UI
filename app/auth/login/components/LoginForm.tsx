@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { loginInputSchema } from '@/schemas/auth/LoginInputSchema';
-import type { loginInputType } from '@/schemas/auth/LoginInputSchema';
-import { useLogin } from '@/hooks/useAuth';
-import { User as UserIcon} from "lucide-react";
-import { Lock as LockIcon} from "lucide-react";
+import { loginInputSchema } from '@/commons/schemas/auth/LoginInputSchema';
+import type { loginInputType } from '@/commons/schemas/auth/LoginInputSchema';
+import { useLogin } from '@/commons/hooks/useAuth';
+import { User as UserIcon } from "lucide-react";
+import { Lock as LockIcon } from "lucide-react";
 import z from 'zod';
-import InputText from '@/components/InputText';
+import InputText from '@/commons/components/InputText';
 
 export default function LoginForm() {
   const { mutate, isPending, isError, error } = useLogin();
@@ -23,37 +23,37 @@ export default function LoginForm() {
       });
       return;
     }
-    
+
     mutate(validation.data);
   }
 
   return (
-      <form action={handleSubmit}>
-        <InputText
-          label="Correo electrónico"
-          name="username"
-          type="text"
-          placeholder="Usuario"
-          icon={<UserIcon size={20} className="opacity-50" />}
-          error={errors.username}
-          defaultValue="mor_2314"
-        />
+    <form action={handleSubmit}>
+      <InputText
+        label="Correo electrónico"
+        name="username"
+        type="text"
+        placeholder="Usuario"
+        icon={<UserIcon size={20} className="opacity-50" />}
+        error={errors.username}
+        defaultValue="mor_2314"
+      />
 
-        <InputText
-          label="Contraseña"
-          name="password"
-          type="password"
-          placeholder="Contraseña"
-          icon={<LockIcon size={20} className="opacity-50 pr-1" />}
-          error={errors.password}
-          defaultValue="83r5^_"
-        />
+      <InputText
+        label="Contraseña"
+        name="password"
+        type="password"
+        placeholder="Contraseña"
+        icon={<LockIcon size={20} className="opacity-50 pr-1" />}
+        error={errors.password}
+        defaultValue="83r5^_"
+      />
 
-        {isError && <p>{error.message}</p>}
+      {isError && <p>{error.message}</p>}
 
-        <button className="btn btn-primary w-full" type="submit" disabled={isPending}>
-          {isPending ? "Ingresando..." : "Iniciar sesión"}
-        </button>
-      </form>
+      <button className="btn btn-primary w-full" type="submit" disabled={isPending}>
+        {isPending ? "Ingresando..." : "Iniciar sesión"}
+      </button>
+    </form>
   );
 }

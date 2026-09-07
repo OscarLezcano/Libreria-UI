@@ -1,4 +1,4 @@
-import type { loginInputType } from "@/schemas/auth/LoginInputSchema";
+import type { loginInputType } from "@/commons/schemas/auth/LoginInputSchema";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const HEADER = { 'Content-Type': 'application/json' };
