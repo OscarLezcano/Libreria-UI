@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { loginInputSchema } from '@/commons/schemas/auth/LoginInputSchema';
-import type { loginInputType } from '@/commons/schemas/auth/LoginInputSchema';
-import { useLogin } from '@/commons/hooks/useAuth';
+import { loginInputSchema } from '@/common/schemas/auth/LoginInputSchema';
+import type { loginInputType } from '@/common/schemas/auth/LoginInputSchema';
+import { useLogin } from '@/common/hooks/useAuth';
 import { User as UserIcon } from "lucide-react";
 import { Lock as LockIcon } from "lucide-react";
 import z from 'zod';
-import InputText from '@/commons/components/InputText';
+import InputText from '@/common/components/InputText';
 
 export default function LoginForm() {
   const { mutate, isPending, isError, error } = useLogin();
