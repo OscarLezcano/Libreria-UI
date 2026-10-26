@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { loginInputSchema } from '@/common/schemas/auth/LoginInputSchema';
 import type { loginInputType } from '@/common/schemas/auth/LoginInputSchema';
 import { useLogin } from '@/common/hooks/useAuth';
@@ -10,6 +11,7 @@ import z from 'zod';
 import InputText from '@/common/components/InputText';
 
 export default function LoginForm() {
+  const router = useRouter();
   const { mutate, isPending, isError, error } = useLogin();
   const [errors, setErrors] = useState<Partial<loginInputType>>({});
 
@@ -18,25 +20,26 @@ export default function LoginForm() {
     if (!validation.success) {
       const fieldErrors = z.treeifyError(validation.error).properties;
       setErrors({
-        username: fieldErrors?.username?.errors?.[0],
+        email: fieldErrors?.email?.errors?.[0],
         password: fieldErrors?.password?.errors?.[0],
       });
       return;
     }
 
-    mutate(validation.data);
+    mutate(validation.data, {
+      onSuccess: () => router.push('/'),
+    });
   }
 
   return (
     <form action={handleSubmit}>
       <InputText
         label="Correo electrónico"
-        name="username"
-        type="text"
-        placeholder="Usuario"
+        name="email"
+        type="email"
+        placeholder="tu@correo.com"
         icon={<UserIcon size={20} className="opacity-50" />}
-        error={errors.username}
-        defaultValue="mor_2314"
+        error={errors.email}
       />
 
       <InputText
@@ -46,7 +49,6 @@ export default function LoginForm() {
         placeholder="Contraseña"
         icon={<LockIcon size={20} className="opacity-50 pr-1" />}
         error={errors.password}
-        defaultValue="83r5^_"
       />
 
       {isError && <p>{error.message}</p>}

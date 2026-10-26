@@ -5,7 +5,11 @@ export function useLogin() {
   return useMutation({
     mutationFn: loginRequest,
     onSuccess: (data) => {
-      document.cookie = `token=${data.token}; path=/; Secure; SameSite=Strict`;
+      document.cookie = `token=${encodeURIComponent(data.token)}; path=/; SameSite=Lax`;
+      localStorage.setItem('token', data.token);
+      const role = data.user?.roles?.[0]?.name || data.user?.role || 'READER';
+      document.cookie = `role=${role}; path=/; SameSite=Lax`;
+      localStorage.setItem('role', role);
     },
   });
 }
