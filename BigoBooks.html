@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Libros — Mapa de pantallas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#15152b;
+  --ink-soft:#3a3a55;
+  --purple:#5b4fe5;
+  --purple-dark:#4638c2;
+  --purple-100:#efedfe;
+  --bg-page:#ffffff;
+  --bg-soft:#f2f2f5;
+  --bg-canvas:#e7e7ee;
+  --bg-admin:#eef1fb;
+  --bg-admin-panel:#f7f8fd;
+  --border:#e3e3ea;
+  --border-soft:#ececf2;
+  --muted:#767689;
+  --muted-2:#9a9aac;
+  --success-bg:#dcf5e3; --success-tx:#1f9d55;
+  --warning-bg:#fdf3d0; --warning-tx:#a9800c;
+  --danger-bg:#fbe2e2; --danger-tx:#d1373f;
+  --info-bg:#dde6fd; --info-tx:#3457d5;
+  --star:#f5b400;
+  --radius:14px;
+  --radius-sm:8px;
+  --shadow-card:0 1px 2px rgba(21,21,43,.04), 0 1px 1px rgba(21,21,43,.03);
+  --shadow-artboard:0 30px 60px -20px rgba(21,21,43,.35), 0 0 0 1px rgba(21,21,43,.04);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--ink);
+  background:var(--bg-canvas);
+  -webkit-font-smoothing:antialiased;
+}
+.brand-font{font-family:'Playfair Display',serif;}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+img{display:block;max-width:100%}
+
+/* ---------- App shell (screen navigator, not part of product UI) ---------- */
+.shell{display:flex;min-height:100vh}
+.nav{
+  width:272px;flex:0 0 272px;background:#101022;color:#fff;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding:22px 14px 30px;
+}
+.nav-brand{display:flex;align-items:baseline;gap:8px;padding:4px 10px 20px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px}
+.nav-brand .t1{font-family:'Playfair Display',serif;font-size:22px;font-weight:700}
+.nav-brand .t2{font-size:11px;color:#9b9bd1;letter-spacing:.06em;text-transform:uppercase}
+.nav-group{margin-bottom:6px}
+.nav-group-title{font-size:10.5px;letter-spacing:.10em;text-transform:uppercase;color:#8080ab;padding:14px 12px 6px;font-weight:700}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;
+  font-size:13.5px;color:#c7c7e6;font-weight:500;margin-bottom:2px;
+}
+.nav-item svg{width:16px;height:16px;flex:0 0 16px;opacity:.85}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+.nav-item.active{background:var(--purple);color:#fff}
+.nav-count{margin-left:auto;font-size:10px;background:rgba(255,255,255,.12);padding:1px 6px;border-radius:20px;color:#d8d8f4}
+
+.canvas{flex:1;min-width:0;padding:44px 40px 100px;overflow-x:auto}
+.canvas-head{max-width:1280px;margin:0 auto 22px}
+.canvas-head .eyebrow{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--purple-dark);font-weight:700;margin-bottom:6px}
+.canvas-head h1{font-family:'Playfair Display',serif;font-size:30px;margin:0 0 6px}
+.canvas-head p{color:var(--muted);font-size:14px;margin:0;max-width:640px;line-height:1.55}
+
+.screen{display:none}
+.screen.active{display:block}
+.artboard{
+  width:1280px;max-width:1280px;margin:0 auto;background:#fff;
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow-artboard);
+}
+.artboard-tag{
+  width:1280px;max-width:1280px;margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center;
+  font-size:11.5px;color:var(--muted-2);font-weight:600;
+}
+.artboard-tag .dim{font-variant-numeric:tabular-nums;color:#b3b3c6}
+
+/* ============================================================ */
+/* Reusable product-UI components (shared style language)        */
+/* ============================================================ */
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:9px;
+  font-size:13.5px;font-weight:600;padding:11px 20px;transition:opacity .15s;white-space:nowrap}
+.btn svg{width:15px;height:15px}
+.btn:hover{opacity:.88}
+.btn-block{width:100%}
+.btn-sm{padding:7px 13px;font-size:12.5px;border-radius:7px}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-outline{background:#fff;color:var(--ink);border:1.4px solid var(--border);}
+.btn-outline:hover{border-color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-soft)}
+.btn-danger-text{background:transparent;color:var(--danger-tx);font-weight:600}
+.btn-link{background:none;color:var(--purple-dark);font-weight:600;padding:0}
+
+/* Reader top nav */
+.r-header{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid var(--border-soft)}
+.r-logo{font-family:'Playfair Display',serif;font-size:23px;font-weight:700;letter-spacing:.01em}
+.r-menu{display:flex;gap:30px;align-items:center}
+.r-menu a{font-size:13px;font-weight:600;color:var(--ink-soft);letter-spacing:.03em}
+.r-menu a.on{color:var(--ink);position:relative}
+.r-menu a.on::after{content:"";position:absolute;left:0;right:0;bottom:-19px;height:2px;background:var(--ink)}
+.r-actions{display:flex;align-items:center;gap:18px}
+.r-cart{position:relative;width:20px;height:20px}
+.r-cart svg{width:20px;height:20px}
+.r-cart .dot{position:absolute;top:-8px;right:-9px;background:var(--purple);color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+.r-avatar{width:32px;height:32px;border-radius:50%;background:var(--purple-100);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+
+/* Book card */
+.book-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.book-card{border:1px solid var(--border-soft);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.book-cover{aspect-ratio:3/4;width:100%;object-fit:cover;background:linear-gradient(135deg,#dedcf8,#c8c4f2)}
+.book-body{padding:14px 14px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.book-price{font-weight:800;font-size:15px;color:var(--purple-dark)}
+.book-title{font-weight:700;font-size:14.5px;line-height:1.3}
+.book-author{font-size:12px;color:var(--purple-dark);font-weight:600}
+.stars{display:flex;gap:2px;align-items:center}
+.stars svg{width:12px;height:12px}
+.star-on{color:var(--star);fill:var(--star)}
+.star-off{color:#e2e2ec;fill:#e2e2ec}
+.book-desc{font-size:12px;color:var(--muted);line-height:1.5;flex:1}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:20px}
+.badge-success{background:var(--success-bg);color:var(--success-tx)}
+.badge-warning{background:var(--warning-bg);color:var(--warning-tx)}
+.badge-danger{background:var(--danger-bg);color:var(--danger-tx)}
+.badge-info{background:var(--info-bg);color:var(--info-tx)}
+.badge-neutral{background:#ececf2;color:var(--ink-soft)}
+
+/* form controls */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.field label{font-size:12.5px;font-weight:700;color:var(--ink)}
+.field .hint{font-size:11.5px;color:var(--muted);font-weight:400}
+.input,.select,textarea.input{
+  border:1.4px solid var(--border);border-radius:9px;padding:11px 13px;font-size:13.5px;font-family:inherit;
+  background:#fff;color:var(--ink);width:100%;
+}
+.input:focus,.select:focus,textarea:focus{outline:none;border-color:var(--purple)}
+.input-icon{position:relative}
+.input-icon svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted-2)}
+.input-icon input{padding-left:36px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* table */
+.table{width:100%;border-collapse:collapse}
+.table th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:0 16px 12px;border-bottom:1px solid var(--border-soft)}
+.table td{padding:16px;font-size:13px;border-bottom:1px solid var(--border-soft);vertical-align:middle}
+.table tr:last-child td{border-bottom:none}
+.table td.strong{font-weight:700}
+.row-actions{display:flex;gap:14px}
+.row-actions a{font-size:12.5px;font-weight:700}
+.link-blue{color:var(--info-tx)}
+.link-red{color:var(--danger-tx)}
+.link-green{color:var(--success-tx)}
+
+/* card */
+.card{background:#fff;border:1px solid var(--border-soft);border-radius:14px;padding:24px}
+.card-title{font-size:19px;font-weight:800;margin:0 0 4px}
+.card-sub{font-size:13px;color:var(--muted);margin:0 0 20px}
+.divider{height:1px;background:var(--border-soft);margin:20px 0}
+
+/* Admin sidebar */
+.admin-shell{display:flex;min-height:760px;background:var(--bg-admin)}
+.admin-side{width:230px;flex:0 0 230px;background:var(--bg-admin);padding:24px 14px;border-right:1px solid #e2e5f5}
+.admin-logo{display:flex;align-items:center;gap:9px;font-family:'Playfair Display',serif;font-weight:700;font-size:19px;padding:0 10px 22px}
+.admin-logo svg{width:19px;height:19px;color:var(--purple-dark)}
+.admin-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--ink-soft);margin-bottom:2px}
+.admin-item svg{width:16px;height:16px;flex:0 0 16px}
+.admin-item.on{background:#fff;color:var(--purple-dark);box-shadow:var(--shadow-card)}
+.admin-item.on span.bar{position:absolute}
+.admin-divider{height:1px;background:#e2e5f5;margin:12px 4px}
+.admin-main{flex:1;padding:32px 34px;background:var(--bg-admin-panel)}
+.admin-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.admin-h1{font-size:25px;font-weight:800;margin:0 0 5px}
+.admin-sub{font-size:13px;color:var(--muted);margin:0}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:var(--shadow-card)}
+.stat-label{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:800}
+.stat-delta{font-size:11.5px;font-weight:700;margin-top:6px}
+.up{color:var(--success-tx)} .down{color:var(--danger-tx)}
+.white-panel{background:#fff;border-radius:14px;padding:22px;box-shadow:var(--shadow-card)}
+
+.tag-pill{display:inline-flex;align-items:center;gap:6px;background:var(--purple-100);color:var(--purple-dark);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px}
+.upload-box{border:1.6px dashed var(--border);border-radius:12px;padding:44px 20px;text-align:center;color:var(--muted)}
+.upload-box svg{width:26px;height:26px;color:var(--muted-2);margin:0 auto 12px}
+.upload-box b{color:var(--ink)}
+.upload-box .small{font-size:11.5px;color:var(--muted-2);margin-top:4px}
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:28px}
+.page-dot{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)}
+.page-dot.on{background:var(--ink);color:#fff}
+
+.footer-dark{background:#101022;color:#c7c7e6;padding:40px 40px 26px}
+.avatar-thumb{width:44px;height:44px;border-radius:10px;object-fit:cover;background:#d8d5f7}
+
+.two-col{display:grid;grid-template-columns:1fr 380px;gap:24px}
+.hd-table-title{font-size:13px;font-weight:800;margin-bottom:12px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+<defs>
+<symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.5 3h2l2.7 12.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L21.5 8H6"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5 15 9l7 1-5.2 5 1.3 7-6.1-3.4L5.9 22l1.3-7L2 10l7-1z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M8 6V4h8v2m-9 0 1 14h8l1-14"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 8.2a3.3 3.3 0 1 1 0 6.4"/><path d="M18.5 14.4A6.5 6.5 0 0 1 21.5 20"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.5-2.4.6a7.6 7.6 0 0 0-1.7-1L15 2.5h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1L6.6 5.5l-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.5 2.4-.6a7.6 7.6 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.6 7.6 0 0 0 1.7-1l2.4.6 2-3.5z"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.2 9a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 1.8-2.6 3.6"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5C4 3.7 4.7 3 5.5 3H19a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H5.5A1.5 1.5 0 0 0 4 21.5z"/><path d="M4 19.5A1.5 1.5 0 0 1 5.5 18H20"/></symbol>
+<symbol id="i-dash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.5"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="1.5"/><rect x="3" y="15" width="7.5" height="6" rx="1.5"/></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 13H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 2.5h5a2 2 0 0 1 2 2v5L10 21z"/><circle cx="14" cy="8" r="1.4" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 7 9-7"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M11 20V4M18 20v-7"/><path d="M2 20h20"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-checkcircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m8 12.5 2.5 2.5L16 9.5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h13l-3 4 3 4H5"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 20 6v6c0 5-3.4 8.5-8 9.5-4.6-1-8-4.5-8-9.5V6z"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 7-2.5 7h17s-2.5-1-2.5-7"/><path d="M10.5 20.5a1.7 1.7 0 0 0 3 0"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0 4-4m-4 4-4-4"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+<symbol id="i-arrow-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 13a8 8 0 0 0 14.6 4.5"/><path d="M4 4v5h5M20 20v-5h-5"/></symbol>
+</defs>
+</svg>
+
+<div class="shell">
+  <!-- ================= SCREEN NAVIGATOR (herramienta de revisión, no forma parte del producto) ================= -->
+  <nav class="nav" id="nav">
+    <div class="nav-brand"><span class="t1 brand-font">Libros</span><span class="t2">Mapa&nbsp;UI</span></div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Autenticación</div>
+      <div class="nav-item" data-screen="login"><svg><use href="#i-lock"/></svg>Iniciar sesión</div>
+      <div class="nav-item" data-screen="registro"><svg><use href="#i-user"/></svg>Registro</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Lector · 10 pantallas</div>
+      <div class="nav-item" data-screen="home"><svg><use href="#i-book"/></svg>Inicio</div>
+      <div class="nav-item" data-screen="explorar"><svg><use href="#i-search"/></svg>Explorar catálogo</div>
+      <div class="nav-item" data-screen="detalle"><svg><use href="#i-book"/></svg>Detalle de libro</div>
+      <div class="nav-item" data-screen="carrito"><svg><use href="#i-cart"/></svg>Carrito</div>
+      <div class="nav-item" data-screen="checkout"><svg><use href="#i-bag"/></svg>Pago</div>
+      <div class="nav-item" data-screen="confirmacion"><svg><use href="#i-checkcircle"/></svg>Confirmación</div>
+      <div class="nav-item" data-screen="mis-compras"><svg><use href="#i-bag"/></svg>Mis compras</div>
+      <div class="nav-item" data-screen="mis-alquileres"><svg><use href="#i-clock"/></svg>Mis alquileres</div>
+      <div class="nav-item" data-screen="perfil"><svg><use href="#i-user"/></svg>Mi cuenta</div>
+      <div class="nav-item" data-screen="contacto"><svg><use href="#i-mail"/></svg>Contacto</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Gestor · 5 pantallas</div>
+      <div class="nav-item" data-screen="gestor-panel"><svg><use href="#i-dash"/></svg>Panel de control</div>
+      <div class="nav-item" data-screen="gestor-cargar"><svg><use href="#i-upload"/></svg>Cargar libro</div>
+      <div class="nav-item" data-screen="gestor-libros"><svg><use href="#i-book"/></svg>Gestionar libros</div>
+      <div class="nav-item" data-screen="gestor-compras"><svg><use href="#i-cart"/></svg>Gestionar compras</div>
+      <div class="nav-item" data-screen="gestor-rentas"><svg><use href="#i-clock"/></svg>Gestionar rentas</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Moderador · 1 pantalla</div>
+      <div class="nav-item" data-screen="moderacion"><svg><use href="#i-flag"/></svg>Cola de moderación</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Administrador · 4 pantallas</div>
+      <div class="nav-item" data-screen="admin-usuarios"><svg><use href="#i-users"/></svg>Usuarios</div>
+      <div class="nav-item" data-screen="admin-promos"><svg><use href="#i-tag"/></svg>Promociones</div>
+      <div class="nav-item" data-screen="admin-reportes"><svg><use href="#i-chart"/></svg>Reportes</div>
+      <div class="nav-item" data-screen="admin-config"><svg><use href="#i-settings"/></svg>Configuración</div>
+    </div>
+  </nav>
+
+  <!-- ================= CANVAS ================= -->
+  <main class="canvas">
+    <div class="canvas-head" id="canvas-head">
+      <div class="eyebrow" id="ch-eyebrow">Lector</div>
+      <h1 id="ch-title">Inicio</h1>
+      <p id="ch-desc">Página de bienvenida del catálogo, con destacados y búsqueda.</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- LOGIN -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-login">
+      <div class="artboard" style="display:flex;min-height:640px">
+        <div style="flex:1;padding:60px 64px;display:flex;flex-direction:column;justify-content:center;max-width:480px">
+          <div class="r-logo" style="margin-bottom:36px">Libros</div>
+          <h2 style="font-size:26px;font-weight:800;margin:0 0 6px">Bienvenido de nuevo</h2>
+          <p style="color:var(--muted);font-size:13.5px;margin:0 0 28px">Ingresá a tu cuenta para comprar y alquilar libros electrónicos.</p>
+          <div class="field"><label>Correo electrónico</label>
+            <div class="input-icon"><svg><use href="#i-mail"/></svg><input class="input" placeholder="tunombre@correo.com"></div>
+          </div>
+          <div class="field"><label>Contraseña</label>
+            <div class="input-icon"><svg><use href="#i-lock"/></svg><input class="input" type="password" placeholder="••••••••"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;font-size:12.5px">
+            <label style="display:flex;gap:7px;align-items:center;color:var(--muted)"><input type="checkbox">Recordarme</label>
+            <a class="btn-link" style="font-size:12.5px">¿Olvidaste tu contraseña?</a>
+          </div>
+          <button class="btn btn-dark btn-block" style="padding:13px">Iniciar sesión</button>
+          <p style="text-align:center;font-size:12.5px;color:var(--muted);margin-top:22px">¿No tenés cuenta? <a class="btn-link">Registrate gratis</a></p>
+        </div>
+        <div style="flex:1;background:linear-gradient(160deg,#efedfe,#d8d3f9);display:flex;align-items:center;justify-content:center;padding:50px">
+          <div style="text-align:center;max-width:320px">
+            <div style="width:190px;height:270px;margin:0 auto 26px;border-radius:10px;background:linear-gradient(160deg,#2c2a55,#4a4590);box-shadow:0 25px 45px -15px rgba(50,40,120,.45);display:flex;align-items:flex-end;padding:18px;color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em">LOOKING BACK</div>
+            <h3 class="brand-font" style="font-size:22px;margin:0 0 8px">Tu próxima gran lectura te espera</h3>
+            <p style="font-size:13px;color:var(--ink-soft);line-height:1.6">Miles de libros para comprar o alquilar, disponibles al instante.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- REGISTRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-registro">
+      <div class="artboard" style="display:flex;min-height:700px">
+        <div style="flex:1;background:linear-gradient(160deg,#efedfe,#d8d3f9);display:flex;align-items:center;justify-content:center;padding:50px">
+          <div style="text-align:center;max-width:320px">
+            <div style="width:190px;height:270px;margin:0 auto 26px;border-radius:10px;background:linear-gradient(160deg,#5b4fe5,#8f7cf0);box-shadow:0 25px 45px -15px rgba(50,40,120,.45)"></div>
+            <h3 class="brand-font" style="font-size:22px;margin:0 0 8px">Creá tu cuenta gratis</h3>
+            <p style="font-size:13px;color:var(--ink-soft);line-height:1.6">Guardá favoritos, seguí tus alquileres y recibí promociones exclusivas.</p>
+          </div>
+        </div>
+        <div style="flex:1;padding:56px 64px;max-width:520px">
+          <div class="r-logo" style="margin-bottom:28px">Libros</div>
+          <h2 style="font-size:26px;font-weight:800;margin:0 0 6px">Crear cuenta</h2>
+          <p style="color:var(--muted);font-size:13.5px;margin:0 0 26px">Es gratis y te lleva menos de un minuto.</p>
+          <div class="grid-2">
+            <div class="field"><label>Nombre</label><input class="input" placeholder="Heber"></div>
+            <div class="field"><label>Apellido</label><input class="input" placeholder="Aranda"></div>
+          </div>
+          <div class="field"><label>Correo electrónico</label><input class="input" placeholder="tunombre@correo.com"></div>
+          <div class="grid-2">
+            <div class="field"><label>Contraseña</label><input class="input" type="password" placeholder="Mínimo 8 caracteres"></div>
+            <div class="field"><label>Confirmar contraseña</label><input class="input" type="password" placeholder="Repetir contraseña"></div>
+          </div>
+          <label style="display:flex;gap:8px;font-size:12px;color:var(--muted);margin-bottom:22px"><input type="checkbox" style="margin-top:2px">Acepto los <a class="btn-link" style="font-size:12px">Términos y Condiciones</a> y la Política de Privacidad</label>
+          <button class="btn btn-dark btn-block" style="padding:13px">Crear cuenta</button>
+          <p style="text-align:center;font-size:12.5px;color:var(--muted);margin-top:20px">¿Ya tenés cuenta? <a class="btn-link">Iniciar sesión</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- HOME -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-home">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a class="on">INICIO</a><a>EXPLORAR</a><a>COMPRAR</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions">
+            <div class="r-cart"><svg><use href="#i-cart"/></svg><span class="dot">2</span></div>
+            <div class="r-avatar">HA</div>
+          </div>
+        </header>
+
+        <div style="display:flex;align-items:center;gap:50px;padding:56px 40px;background:var(--bg-soft)">
+          <div style="flex:1">
+            <h1 class="brand-font" style="font-size:44px;line-height:1.1;font-weight:700;margin:0 0 18px">Buenos viejos<br>libros para ti</h1>
+            <p style="color:var(--ink-soft);font-size:14.5px;max-width:400px;margin:0 0 26px;line-height:1.6">Encontrá y leé más libros que te encantarán y llevá un registro de los que querés leer.</p>
+            <div class="input-icon" style="max-width:360px;background:#fff;border-radius:9px"><svg><use href="#i-search"/></svg><input class="input" style="border:1px solid var(--border)" placeholder="Buscar título, autor o género..."></div>
+          </div>
+          <div style="flex:0 0 260px;height:300px;border-radius:14px;background:linear-gradient(160deg,#2c2a55,#4a4590);box-shadow:0 30px 50px -20px rgba(50,40,120,.4)"></div>
+        </div>
+
+        <div style="padding:44px 40px 10px">
+          <h2 style="text-align:center;font-size:22px;font-weight:800;margin:0 0 24px">Libros más vendidos</h2>
+          <div class="book-grid">
+            <div class="book-card">
+              <div class="book-cover" style="background:linear-gradient(160deg,#ffe3b0,#ffb98a)"></div>
+              <div class="book-body">
+                <span class="book-price">$9.99</span>
+                <span class="book-title">Cooking Made Easy</span>
+                <span class="book-author">Emily Clark</span>
+                <div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div>
+                <p class="book-desc">Recetas simples y deliciosas para el día a día.</p>
+                <button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button>
+              </div>
+            </div>
+            <div class="book-card">
+              <div class="book-cover" style="background:linear-gradient(160deg,#c7d9ff,#8fa8f2)"></div>
+              <div class="book-body">
+                <span class="book-price">$14.99</span>
+                <span class="book-title">Mystery of the Lost Island</span>
+                <span class="book-author">Jane Smith</span>
+                <div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div>
+                <p class="book-desc">Una novela de misterio que te mantiene en vilo.</p>
+                <button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button>
+              </div>
+            </div>
+            <div class="book-card">
+              <div class="book-cover" style="background:linear-gradient(160deg,#d7cffb,#a998f2)"></div>
+              <div class="book-body">
+                <span class="book-price">$13.99</span>
+                <span class="book-title">Shadows of Doubt</span>
+                <span class="book-author">Emma Watson</span>
+                <div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div>
+                <p class="book-desc">Una novela policial llena de giros inesperados.</p>
+                <button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button>
+              </div>
+            </div>
+            <div class="book-card">
+              <div class="book-cover" style="background:linear-gradient(160deg,#ffd7d7,#f4a2a2)"></div>
+              <div class="book-body">
+                <span class="book-price">$15.75</span>
+                <span class="book-title">Taste of Italy</span>
+                <span class="book-author">Gina Rossi</span>
+                <div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg></div>
+                <p class="book-desc">Recetas auténticas para llevar Italia a tu cocina.</p>
+                <button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button>
+              </div>
+            </div>
+          </div>
+          <div class="pagination"><span class="page-dot on">1</span><span class="page-dot">2</span><span class="page-dot">3</span><span class="page-dot">4</span></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:50px;padding:56px 40px">
+          <div style="flex:0 0 320px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            <div style="aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#ffcf6b,#ff9f6b)"></div>
+            <div style="aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#2c2a55,#4a4590)"></div>
+            <div style="aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#f6c4dd,#e79ec5)"></div>
+            <div style="aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#bfe3d0,#8fcdae)"></div>
+            <div style="aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#d7cffb,#a998f2)"></div>
+            <div style="aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#ffe3b0,#ffb98a)"></div>
+          </div>
+          <div style="flex:1">
+            <h2 class="brand-font" style="font-size:28px;margin:0 0 4px">¡Tus libros</h2>
+            <h2 class="brand-font" style="font-size:28px;margin:0 0 16px;color:var(--purple-dark)">favoritos aquí!</h2>
+            <p style="color:var(--muted);font-size:13.5px;max-width:420px;line-height:1.6;margin:0 0 22px">Encontrá las historias que te apasionan, los autores que admirás y los géneros que marcan tendencia.</p>
+            <button class="btn btn-purple">Explorar</button>
+          </div>
+        </div>
+
+        <footer class="footer-dark">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:30px">
+            <div>
+              <div class="brand-font" style="color:#fff;font-size:19px;margin-bottom:12px">BigBooks</div>
+              <div style="font-size:12.5px;line-height:2.1;color:#a5a5cc">Sobre BigBooks<br>Equipo directivo<br>Mapa del sitio</div>
+            </div>
+            <div>
+              <div style="font-weight:700;color:#fff;margin-bottom:12px;font-size:13px">Síguenos</div>
+              <div style="font-size:12.5px;line-height:2.1;color:#a5a5cc">Facebook<br>Instagram<br>Twitter</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid rgba(255,255,255,.08);margin-top:26px;padding-top:16px;font-size:11.5px;color:#7f7fab">© 2026 BigBooks · Condiciones de uso · Política de privacidad</div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- EXPLORAR -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-explorar">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a>INICIO</a><a class="on">EXPLORAR</a><a>COMPRAR</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg><span class="dot">2</span></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="display:flex">
+          <aside style="width:250px;flex:0 0 250px;padding:32px 24px;border-right:1px solid var(--border-soft)">
+            <div class="field"><label>Buscar</label><div class="input-icon"><svg><use href="#i-search"/></svg><input class="input" placeholder="Título o autor"></div></div>
+            <div class="divider"></div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Género</div>
+            <label style="display:flex;gap:8px;font-size:13px;margin-bottom:10px"><input type="checkbox" checked>Ficción <span style="margin-left:auto;color:var(--muted-2)">128</span></label>
+            <label style="display:flex;gap:8px;font-size:13px;margin-bottom:10px"><input type="checkbox">Misterio <span style="margin-left:auto;color:var(--muted-2)">64</span></label>
+            <label style="display:flex;gap:8px;font-size:13px;margin-bottom:10px"><input type="checkbox">Cocina <span style="margin-left:auto;color:var(--muted-2)">37</span></label>
+            <label style="display:flex;gap:8px;font-size:13px;margin-bottom:10px"><input type="checkbox">Tecnología <span style="margin-left:auto;color:var(--muted-2)">29</span></label>
+            <label style="display:flex;gap:8px;font-size:13px;margin-bottom:10px"><input type="checkbox">Diseño <span style="margin-left:auto;color:var(--muted-2)">18</span></label>
+            <div class="divider"></div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Precio</div>
+            <input type="range" style="width:100%">
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)"><span>$0</span><span>$50</span></div>
+            <div class="divider"></div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Disponibilidad</div>
+            <label style="display:flex;gap:8px;font-size:13px;margin-bottom:10px"><input type="checkbox">Compra</label>
+            <label style="display:flex;gap:8px;font-size:13px;margin-bottom:10px"><input type="checkbox">Alquiler</label>
+            <button class="btn btn-outline btn-block" style="margin-top:8px">Limpiar filtros</button>
+          </aside>
+          <div style="flex:1;padding:32px 36px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+              <div style="font-size:13.5px;color:var(--muted)">Mostrando <b style="color:var(--ink)">1–12</b> de 214 resultados para <b style="color:var(--ink)">"Ficción"</b></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px"><svg style="width:15px;height:15px"><use href="#i-filter"/></svg>Ordenar por: <b>Relevancia</b><svg style="width:14px;height:14px"><use href="#i-chev"/></svg></div>
+            </div>
+            <div class="book-grid" style="grid-template-columns:repeat(4,1fr)">
+              <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#c7d9ff,#8fa8f2)"></div><div class="book-body"><span class="book-price">$14.99</span><span class="book-title">Mystery of the Lost Island</span><span class="book-author">Jane Smith</span><div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button></div></div>
+              <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#d7cffb,#a998f2)"></div><div class="book-body"><span class="book-price">$13.99</span><span class="book-title">Shadows of Doubt</span><span class="book-author">Emma Watson</span><div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button></div></div>
+              <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#bfe3d0,#8fcdae)"></div><div class="book-body"><span class="book-price">$29.99</span><span class="book-title">Learning React</span><span class="book-author">Alex Johnson</span><div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg></div><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button></div></div>
+              <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#f6c4dd,#e79ec5)"></div><div class="book-body"><span class="book-price">$12.99</span><span class="book-title">The Silent Forest</span><span class="book-author">David Kim</span><div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button></div></div>
+              <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#ffcf6b,#ff9f6b)"></div><div class="book-body"><span class="book-price">$18.25</span><span class="book-title">The Lost Expedition</span><span class="book-author">Tom Hardy</span><div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button></div></div>
+              <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#ffe3b0,#ffb98a)"></div><div class="book-body"><span class="book-price">$9.99</span><span class="book-title">Cooking Made Easy</span><span class="book-author">Emily Clark</span><div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button></div></div>
+              <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#ffd7d7,#f4a2a2)"></div><div class="book-body"><span class="book-price">$15.75</span><span class="book-title">Taste of Italy</span><span class="book-author">Gina Rossi</span><div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg></div><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button></div></div>
+              <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#2c2a55,#4a4590)"></div><div class="book-body"><span class="book-price">$11.50</span><span class="book-title">Looking Back</span><span class="book-author">Sofia Reyes</span><div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-cart"/></svg>Agregar</button></div></div>
+            </div>
+            <div class="pagination"><svg style="width:14px;height:14px;transform:rotate(180deg)"><use href="#i-chev"/></svg><span class="page-dot on">1</span><span class="page-dot">2</span><span class="page-dot">3</span><span class="page-dot">…</span><span class="page-dot">18</span><svg style="width:14px;height:14px"><use href="#i-chev"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- DETALLE DE LIBRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-detalle">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a>INICIO</a><a class="on">EXPLORAR</a><a>COMPRAR</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg><span class="dot">2</span></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="font-size:12px;color:var(--muted);padding:20px 40px 0">Explorar &nbsp;/&nbsp; Ficción &nbsp;/&nbsp; <span style="color:var(--ink)">Mystery of the Lost Island</span></div>
+        <div style="display:flex;gap:48px;padding:24px 40px 44px">
+          <div style="flex:0 0 300px">
+            <div style="aspect-ratio:3/4;border-radius:14px;background:linear-gradient(160deg,#c7d9ff,#8fa8f2);box-shadow:0 25px 45px -20px rgba(40,60,150,.4)"></div>
+          </div>
+          <div style="flex:1;max-width:480px">
+            <span class="tag-pill">Misterio</span>
+            <h1 style="font-size:28px;font-weight:800;margin:14px 0 6px">Mystery of the Lost Island</h1>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+              <span style="font-size:13.5px;color:var(--purple-dark);font-weight:700">Jane Smith</span>
+              <div class="stars"><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-on"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg><svg class="star-off"><use href="#i-star"/></svg></div>
+              <span style="font-size:12px;color:var(--muted)">(238 reseñas)</span>
+            </div>
+            <p style="font-size:14px;color:var(--ink-soft);line-height:1.7;margin:0 0 24px">Una novela de misterio que te mantiene en vilo hasta la última página. Cuando un arqueólogo desaparece en una isla remota, su hija debe seguir sus pasos y descifrar los secretos que esconde antes de que sea demasiado tarde.</p>
+            <div class="card" style="padding:20px">
+              <div style="display:flex;gap:10px;margin-bottom:16px">
+                <button class="btn btn-outline btn-sm" style="flex:1;background:var(--purple-100);border-color:var(--purple);color:var(--purple-dark)">Comprar</button>
+                <button class="btn btn-outline btn-sm" style="flex:1">Alquilar</button>
+              </div>
+              <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px">
+                <div><span style="font-size:26px;font-weight:800;color:var(--purple-dark)">$14.99</span> <span style="font-size:12px;color:var(--muted)">compra definitiva</span></div>
+                <span style="font-size:12px;color:var(--muted)">o desde <b>$3.99</b> / 7 días</span>
+              </div>
+              <button class="btn btn-dark btn-block" style="padding:13px"><svg><use href="#i-cart"/></svg>Agregar al carrito</button>
+              <div style="display:flex;gap:16px;margin-top:14px;font-size:11.5px;color:var(--muted)">
+                <span style="display:flex;gap:5px;align-items:center"><svg style="width:13px;height:13px"><use href="#i-checkcircle"/></svg>Descarga inmediata</span>
+                <span style="display:flex;gap:5px;align-items:center"><svg style="width:13px;height:13px"><use href="#i-checkcircle"/></svg>Formato ePub / PDF</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex:0 0 300px">
+            <div class="card">
+              <div style="font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:14px">Detalles</div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border-soft)"><span style="color:var(--muted)">Editorial</span><span style="font-weight:600">Nortesur</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border-soft)"><span style="color:var(--muted)">Idioma</span><span style="font-weight:600">Español</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border-soft)"><span style="color:var(--muted)">Páginas</span><span style="font-weight:600">312</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0"><span style="color:var(--muted)">Publicado</span><span style="font-weight:600">2024</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CARRITO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-carrito">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a>INICIO</a><a>EXPLORAR</a><a class="on">COMPRAR</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg><span class="dot">2</span></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="padding:36px 40px 60px">
+          <h1 style="font-size:24px;font-weight:800;margin:0 0 4px">Tu catálogo</h1>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 26px">2 items</p>
+          <div class="two-col">
+            <div>
+              <div class="card" style="display:flex;gap:16px;align-items:center;margin-bottom:14px">
+                <div class="avatar-thumb" style="width:64px;height:86px;background:linear-gradient(160deg,#c7d9ff,#8fa8f2)"></div>
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:14.5px">Mystery of the Lost Island</div>
+                  <div style="font-size:12px;color:var(--purple-dark);font-weight:600;margin:2px 0 6px">Jane Smith</div>
+                  <span class="badge badge-info">Compra</span>
+                </div>
+                <div style="font-weight:800;font-size:15px">$14.99</div>
+                <svg style="width:17px;height:17px;color:var(--muted-2);cursor:pointer"><use href="#i-trash"/></svg>
+              </div>
+              <div class="card" style="display:flex;gap:16px;align-items:center">
+                <div class="avatar-thumb" style="width:64px;height:86px;background:linear-gradient(160deg,#ffe3b0,#ffb98a)"></div>
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:14.5px">Cooking Made Easy</div>
+                  <div style="font-size:12px;color:var(--purple-dark);font-weight:600;margin:2px 0 6px">Emily Clark</div>
+                  <span class="badge badge-warning">Alquiler · 7 días</span>
+                </div>
+                <div style="font-weight:800;font-size:15px">$9.99</div>
+                <svg style="width:17px;height:17px;color:var(--muted-2);cursor:pointer"><use href="#i-trash"/></svg>
+              </div>
+            </div>
+            <div class="card" style="height:fit-content">
+              <div class="card-title" style="font-size:16px">Resumen del pedido</div>
+              <div style="display:flex;justify-content:space-between;font-size:13.5px;padding:10px 0;color:var(--muted)"><span>Subtotal</span><span style="color:var(--ink)">$24.98</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13.5px;padding:10px 0;color:var(--muted);border-bottom:1px solid var(--border-soft)"><span>Descuento</span><span style="color:var(--ink)">$0.00</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;padding:14px 0"><span>Total</span><span>$24.98</span></div>
+              <button class="btn btn-dark btn-block" style="padding:13px">Proceder al pago</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CHECKOUT -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-checkout">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a>INICIO</a><a>EXPLORAR</a><a class="on">COMPRAR</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg><span class="dot">2</span></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="padding:36px 40px 60px">
+          <h1 style="font-size:24px;font-weight:800;margin:0 0 26px">Confirmar y pagar</h1>
+          <div class="two-col">
+            <div>
+              <div class="card" style="margin-bottom:18px">
+                <div class="card-title" style="font-size:16px">Datos de facturación</div>
+                <div class="grid-2">
+                  <div class="field"><label>Nombre completo</label><input class="input" value="Heber Aranda"></div>
+                  <div class="field"><label>Correo electrónico</label><input class="input" value="heber.aranda@correo.com"></div>
+                </div>
+                <div class="field"><label>N° de documento</label><input class="input" placeholder="4.123.456"></div>
+              </div>
+              <div class="card">
+                <div class="card-title" style="font-size:16px">Método de pago</div>
+                <div class="card-sub">Pago simulado — no se procesan datos reales.</div>
+                <div style="display:flex;gap:10px;margin-bottom:18px">
+                  <div class="badge-neutral" style="border:1.5px solid var(--purple);background:var(--purple-100);color:var(--purple-dark);padding:10px 16px;border-radius:9px;font-weight:700;font-size:13px;flex:1;text-align:center">💳 Tarjeta</div>
+                  <div class="badge-neutral" style="border:1.5px solid var(--border);padding:10px 16px;border-radius:9px;font-weight:700;font-size:13px;flex:1;text-align:center;color:var(--muted)">Billetera digital</div>
+                </div>
+                <div class="field"><label>Número de tarjeta</label><input class="input" placeholder="4111 1111 1111 1111"></div>
+                <div class="grid-2">
+                  <div class="field"><label>Vencimiento</label><input class="input" placeholder="MM/AA"></div>
+                  <div class="field"><label>CVV</label><input class="input" placeholder="123"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="height:fit-content">
+              <div class="card-title" style="font-size:16px">Tu pedido</div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;color:var(--muted)"><span>Mystery of the Lost Island</span><span style="color:var(--ink)">$14.99</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;color:var(--muted);border-bottom:1px solid var(--border-soft)"><span>Cooking Made Easy (alquiler)</span><span style="color:var(--ink)">$9.99</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;padding:14px 0"><span>Total</span><span>$24.98</span></div>
+              <button class="btn btn-dark btn-block" style="padding:13px">Confirmar compra</button>
+              <p style="font-size:11px;color:var(--muted-2);text-align:center;margin-top:12px">Recibirás un correo con la confirmación</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CONFIRMACIÓN -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-confirmacion">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a class="on">INICIO</a><a>EXPLORAR</a><a>COMPRAR</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:80px 40px">
+          <div style="width:72px;height:72px;border-radius:50%;background:var(--success-bg);color:var(--success-tx);display:flex;align-items:center;justify-content:center;margin-bottom:24px"><svg style="width:34px;height:34px"><use href="#i-checkcircle"/></svg></div>
+          <h1 style="font-size:26px;font-weight:800;margin:0 0 8px">¡Pedido confirmado!</h1>
+          <p style="color:var(--muted);font-size:14px;max-width:420px;line-height:1.6;margin:0 0 8px">Tu compra fue procesada con éxito. Te enviamos los detalles a <b style="color:var(--ink)">heber.aranda@correo.com</b>.</p>
+          <p style="color:var(--muted-2);font-size:12.5px;margin:0 0 32px">N° de orden: <b style="color:var(--ink-soft)">#BB-20260830-114</b></p>
+          <div class="card" style="width:100%;max-width:460px;text-align:left;margin-bottom:28px">
+            <div style="display:flex;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--border-soft)">
+              <div class="avatar-thumb" style="width:44px;height:60px;background:linear-gradient(160deg,#c7d9ff,#8fa8f2)"></div>
+              <div style="flex:1"><div style="font-weight:700;font-size:13.5px">Mystery of the Lost Island</div><div style="font-size:11.5px;color:var(--muted)">Compra · disponible para descarga</div></div>
+              <span style="font-weight:700;font-size:13px">$14.99</span>
+            </div>
+            <div style="display:flex;gap:14px;align-items:center;padding-top:14px">
+              <div class="avatar-thumb" style="width:44px;height:60px;background:linear-gradient(160deg,#ffe3b0,#ffb98a)"></div>
+              <div style="flex:1"><div style="font-weight:700;font-size:13.5px">Cooking Made Easy</div><div style="font-size:11.5px;color:var(--muted)">Alquiler · vence el 06/09/2026</div></div>
+              <span style="font-weight:700;font-size:13px">$9.99</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <button class="btn btn-outline">Ver mis compras</button>
+            <button class="btn btn-dark">Seguir explorando</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MIS COMPRAS -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-mis-compras">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a>INICIO</a><a>EXPLORAR</a><a class="on">MIS COMPRAS</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="padding:36px 40px 60px">
+          <h1 style="font-size:24px;font-weight:800;margin:0 0 4px">Mis compras</h1>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 26px">Historial de libros comprados y disponibles para descarga</p>
+          <div class="book-grid" style="grid-template-columns:repeat(4,1fr)">
+            <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#c7d9ff,#8fa8f2)"></div><div class="book-body"><span class="book-title">Mystery of the Lost Island</span><span class="book-author">Jane Smith</span><span style="font-size:11px;color:var(--muted)">Comprado el 24/05/2026</span><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-download"/></svg>Descargar</button></div></div>
+            <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#2c2a55,#4a4590)"></div><div class="book-body"><span class="book-title">Cien años de soledad</span><span class="book-author">Gabriel García Márquez</span><span style="font-size:11px;color:var(--muted)">Comprado el 20/05/2026</span><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-download"/></svg>Descargar</button></div></div>
+            <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#bfe3d0,#8fcdae)"></div><div class="book-body"><span class="book-title">Learning React</span><span class="book-author">Alex Johnson</span><span style="font-size:11px;color:var(--muted)">Comprado el 02/05/2026</span><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-download"/></svg>Descargar</button></div></div>
+            <div class="book-card"><div class="book-cover" style="background:linear-gradient(160deg,#ffd7d7,#f4a2a2)"></div><div class="book-body"><span class="book-title">Taste of Italy</span><span class="book-author">Gina Rossi</span><span style="font-size:11px;color:var(--muted)">Comprado el 28/04/2026</span><button class="btn btn-dark btn-sm btn-block"><svg><use href="#i-download"/></svg>Descargar</button></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MIS ALQUILERES -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-mis-alquileres">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a>INICIO</a><a>EXPLORAR</a><a>MIS COMPRAS</a><a class="on">MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="padding:36px 40px 60px">
+          <h1 style="font-size:24px;font-weight:800;margin:0 0 4px">Mis alquileres</h1>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 26px">Libros alquilados, activos y vencidos</p>
+          <table class="table">
+            <thead><tr><th>Libro</th><th>Inicio</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#ffe3b0,#ffb98a)"></div><span class="strong">Cooking Made Easy</span></td><td>30/08/2026</td><td>06/09/2026</td><td><span class="badge badge-success">Activo</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Leer</a><a class="link-blue" style="cursor:pointer">Extender</a></td></tr>
+              <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#d7cffb,#a998f2)"></div><span class="strong">Shadows of Doubt</span></td><td>10/08/2026</td><td>17/08/2026</td><td><span class="badge badge-danger">Vencido</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Renovar</a></td></tr>
+              <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#bfe3d0,#8fcdae)"></div><span class="strong">Learning React</span></td><td>01/08/2026</td><td>15/08/2026</td><td><span class="badge badge-info">Devuelto</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Volver a alquilar</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MI CUENTA -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-perfil">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a>INICIO</a><a>EXPLORAR</a><a>MIS COMPRAS</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="padding:36px 40px 60px;display:flex;gap:28px">
+          <aside style="width:220px;flex:0 0 220px">
+            <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:26px 10px;background:var(--bg-soft);border-radius:14px;margin-bottom:16px">
+              <div class="r-avatar" style="width:64px;height:64px;font-size:20px;margin-bottom:12px">HA</div>
+              <div style="font-weight:700;font-size:14.5px">Heber Aranda</div>
+              <div style="font-size:12px;color:var(--muted)">Lector</div>
+            </div>
+            <div class="admin-item on"><svg><use href="#i-user"/></svg>Datos personales</div>
+            <div class="admin-item"><svg><use href="#i-lock"/></svg>Seguridad</div>
+            <div class="admin-item"><svg><use href="#i-bell"/></svg>Notificaciones</div>
+            <div class="admin-item"><svg><use href="#i-bag"/></svg>Mis compras</div>
+            <div class="admin-item"><svg><use href="#i-clock"/></svg>Mis alquileres</div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+          </aside>
+          <div style="flex:1;max-width:560px">
+            <div class="card">
+              <div class="card-title">Datos personales</div>
+              <div class="card-sub">Actualizá tu información de perfil</div>
+              <div class="grid-2">
+                <div class="field"><label>Nombre</label><input class="input" value="Heber"></div>
+                <div class="field"><label>Apellido</label><input class="input" value="Aranda"></div>
+              </div>
+              <div class="field"><label>Correo electrónico</label><input class="input" value="heber.aranda@correo.com"></div>
+              <div class="field"><label>Teléfono</label><input class="input" placeholder="+595 9xx xxx xxx"></div>
+              <div class="field"><label>Ciudad</label><input class="input" value="Encarnación, Paraguay"></div>
+              <button class="btn btn-dark">Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CONTACTO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-contacto">
+      <div class="artboard">
+        <header class="r-header">
+          <div class="r-logo">Libros</div>
+          <div class="r-menu"><a>INICIO</a><a>EXPLORAR</a><a>COMPRAR</a><a>MIS ALQUILERES</a></div>
+          <div class="r-actions"><div class="r-cart"><svg><use href="#i-cart"/></svg></div><div class="r-avatar">HA</div></div>
+        </header>
+        <div style="display:flex;padding:56px 40px 70px;gap:60px">
+          <div style="flex:1;max-width:420px">
+            <span class="tag-pill">Contacto</span>
+            <h1 class="brand-font" style="font-size:32px;margin:16px 0 12px">¿Tenés alguna consulta?</h1>
+            <p style="color:var(--muted);font-size:14px;line-height:1.7;margin:0 0 26px">Escribinos y te responderemos a la brevedad. También podés revisar nuestras preguntas frecuentes.</p>
+            <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:18px"><svg style="width:18px;height:18px;color:var(--purple-dark);flex:0 0 18px"><use href="#i-mail"/></svg><div><div style="font-weight:700;font-size:13.5px">soporte@bigbooks.com</div><div style="font-size:12px;color:var(--muted)">Respondemos en menos de 24 hs</div></div></div>
+            <div style="display:flex;gap:12px;align-items:flex-start"><svg style="width:18px;height:18px;color:var(--purple-dark);flex:0 0 18px"><use href="#i-help"/></svg><div><div style="font-weight:700;font-size:13.5px">Centro de ayuda</div><div style="font-size:12px;color:var(--muted)">Guías sobre compras, alquileres y descargas</div></div></div>
+          </div>
+          <div class="card" style="flex:1;max-width:480px;height:fit-content">
+            <div class="grid-2">
+              <div class="field"><label>Nombre</label><input class="input" placeholder="Tu nombre"></div>
+              <div class="field"><label>Correo electrónico</label><input class="input" placeholder="tunombre@correo.com"></div>
+            </div>
+            <div class="field"><label>Asunto</label><input class="input" placeholder="¿En qué podemos ayudarte?"></div>
+            <div class="field"><label>Mensaje</label><textarea class="input" rows="5" placeholder="Escribí tu consulta..."></textarea></div>
+            <button class="btn btn-dark btn-block" style="padding:13px">Enviar mensaje</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- GESTOR · PANEL DE CONTROL -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-gestor-panel">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-book"/></svg>Libros Admin</div>
+            <div class="admin-item on"><svg><use href="#i-dash"/></svg>Panel de control</div>
+            <div class="admin-item"><svg><use href="#i-upload"/></svg>Cargar libros</div>
+            <div class="admin-item"><svg><use href="#i-book"/></svg>Gestionar libros</div>
+            <div class="admin-item"><svg><use href="#i-cart"/></svg>Gestionar compras</div>
+            <div class="admin-item"><svg><use href="#i-clock"/></svg>Gestionar rentas</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row">
+              <div><h1 class="admin-h1">Panel de control</h1><p class="admin-sub">Resumen general de tu actividad como gestor</p></div>
+              <button class="btn btn-dark btn-sm"><svg><use href="#i-plus"/></svg>Cargar libro</button>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card"><div class="stat-label">Libros publicados</div><div class="stat-value">48</div><div class="stat-delta up">+3 este mes</div></div>
+              <div class="stat-card"><div class="stat-label">Ventas del mes</div><div class="stat-value">₲ 2.4M</div><div class="stat-delta up">+12.5%</div></div>
+              <div class="stat-card"><div class="stat-label">Alquileres activos</div><div class="stat-value">27</div><div class="stat-delta up">+4</div></div>
+              <div class="stat-card"><div class="stat-label">Alquileres vencidos</div><div class="stat-value">5</div><div class="stat-delta down">+2</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px">
+              <div class="white-panel">
+                <div class="hd-table-title">Ventas de los últimos 7 días</div>
+                <svg viewBox="0 0 460 160" style="width:100%;height:160px">
+                  <polyline points="0,120 60,100 120,110 180,70 240,85 300,50 360,60 420,30" fill="none" stroke="#5b4fe5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="0,120 60,100 120,110 180,70 240,85 300,50 360,60 420,30 420,160 0,160" fill="#5b4fe5" opacity=".08" stroke="none"/>
+                </svg>
+              </div>
+              <div class="white-panel">
+                <div class="hd-table-title">Libros más vendidos</div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;padding:9px 0;border-bottom:1px solid var(--border-soft)"><span>Cien años de soledad</span><b>18</b></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;padding:9px 0;border-bottom:1px solid var(--border-soft)"><span>Rayuela</span><b>14</b></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;padding:9px 0;border-bottom:1px solid var(--border-soft)"><span>Ficciones</span><b>11</b></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;padding:9px 0"><span>Pedro Páramo</span><b>9</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- GESTOR · CARGAR LIBRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-gestor-cargar">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-book"/></svg>Libros Admin</div>
+            <div class="admin-item"><svg><use href="#i-dash"/></svg>Panel de control</div>
+            <div class="admin-item on"><svg><use href="#i-upload"/></svg>Cargar libros</div>
+            <div class="admin-item"><svg><use href="#i-book"/></svg>Gestionar libros</div>
+            <div class="admin-item"><svg><use href="#i-cart"/></svg>Gestionar compras</div>
+            <div class="admin-item"><svg><use href="#i-clock"/></svg>Gestionar rentas</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row"><div><h1 class="admin-h1">Cargar libro</h1><p class="admin-sub">Agregá un nuevo libro digital al catálogo de la plataforma</p></div></div>
+            <div class="white-panel" style="max-width:820px">
+              <div class="hd-table-title" style="font-size:15px;margin-bottom:18px">Información del libro</div>
+              <div class="grid-2">
+                <div class="field"><label>Nombre del libro *</label><input class="input" placeholder="Ej: Cien años de soledad"></div>
+                <div class="field"><label>Nombre del autor *</label><input class="input" placeholder="Ej: Gabriel García Márquez"></div>
+              </div>
+              <div class="grid-3">
+                <div class="field"><label>Categoría *</label><select class="select"><option>Seleccionar categoría</option><option>Ficción</option><option>Misterio</option><option>Cocina</option></select></div>
+                <div class="field"><label>Precio de compra (₲) *</label><input class="input" placeholder="45.000"></div>
+                <div class="field"><label>Precio de alquiler (₲) / 7 días</label><input class="input" placeholder="12.000"></div>
+              </div>
+              <div class="field"><label>Descripción</label><textarea class="input" rows="3" placeholder="Breve resumen del libro..."></textarea></div>
+              <div class="field"><label>Imagen de portada</label>
+                <div class="upload-box"><svg><use href="#i-upload"/></svg><div><b>Haga clic para cargar</b> o arrastre y suelte</div><div class="small">PNG, JPG, GIF hasta 5MB (recomendado 400×600 px)</div></div>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+                <button class="btn btn-outline">Cancelar</button>
+                <button class="btn btn-dark">Publicar libro</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- GESTOR · GESTIONAR LIBROS -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-gestor-libros">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-book"/></svg>Libros Admin</div>
+            <div class="admin-item"><svg><use href="#i-dash"/></svg>Panel de control</div>
+            <div class="admin-item"><svg><use href="#i-upload"/></svg>Cargar libros</div>
+            <div class="admin-item on"><svg><use href="#i-book"/></svg>Gestionar libros</div>
+            <div class="admin-item"><svg><use href="#i-cart"/></svg>Gestionar compras</div>
+            <div class="admin-item"><svg><use href="#i-clock"/></svg>Gestionar rentas</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row">
+              <div><h1 class="admin-h1">Gestionar libros</h1><p class="admin-sub">Editá, pausá o eliminá los libros de tu catálogo</p></div>
+              <button class="btn btn-dark btn-sm"><svg><use href="#i-plus"/></svg>Nuevo libro</button>
+            </div>
+            <div class="white-panel">
+              <table class="table">
+                <thead><tr><th>Libro</th><th>Categoría</th><th>Precio compra</th><th>Precio alquiler</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#2c2a55,#4a4590)"></div><span class="strong">Cien años de soledad</span></td><td>Ficción</td><td>₲ 45.000</td><td>₲ 12.000</td><td><span class="badge badge-success">Publicado</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer"><svg style="width:13px;height:13px;vertical-align:-2px"><use href="#i-edit"/></svg> Editar</a><a class="link-red" style="cursor:pointer">Pausar</a></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#d7cffb,#a998f2)"></div><span class="strong">Rayuela</span></td><td>Ficción</td><td>₲ 49.000</td><td>₲ 13.500</td><td><span class="badge badge-success">Publicado</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer"><svg style="width:13px;height:13px;vertical-align:-2px"><use href="#i-edit"/></svg> Editar</a><a class="link-red" style="cursor:pointer">Pausar</a></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#bfe3d0,#8fcdae)"></div><span class="strong">Ficciones</span></td><td>Ficción</td><td>₲ 52.000</td><td>₲ 14.000</td><td><span class="badge badge-warning">En revisión</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer"><svg style="width:13px;height:13px;vertical-align:-2px"><use href="#i-edit"/></svg> Editar</a><a class="link-red" style="cursor:pointer">Eliminar</a></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#ffe3b0,#ffb98a)"></div><span class="strong">Pedro Páramo</span></td><td>Ficción</td><td>₲ 38.000</td><td>₲ 10.500</td><td><span class="badge badge-neutral">Pausado</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer"><svg style="width:13px;height:13px;vertical-align:-2px"><use href="#i-edit"/></svg> Editar</a><a class="link-green" style="cursor:pointer">Publicar</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- GESTOR · GESTIONAR COMPRAS -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-gestor-compras">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-book"/></svg>Libros Admin</div>
+            <div class="admin-item"><svg><use href="#i-dash"/></svg>Panel de control</div>
+            <div class="admin-item"><svg><use href="#i-upload"/></svg>Cargar libros</div>
+            <div class="admin-item"><svg><use href="#i-book"/></svg>Gestionar libros</div>
+            <div class="admin-item on"><svg><use href="#i-cart"/></svg>Gestionar compras</div>
+            <div class="admin-item"><svg><use href="#i-clock"/></svg>Gestionar rentas</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row"><div><h1 class="admin-h1">Gestionar compras</h1><p class="admin-sub">Monitoreé y administré el historial de transacciones y compras de libros</p></div></div>
+            <div class="white-panel">
+              <div class="hd-table-title">Lista de transacciones</div>
+              <table class="table">
+                <thead><tr><th>S.N.</th><th>Nombre del libro</th><th>Comprador</th><th>Fecha de compra</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td class="strong">Cien años de soledad</td><td>Carlos Gómez</td><td>24/05/2026</td><td>₲ 45.000</td><td><span class="badge badge-success">Completada</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Detalles</a><a class="link-red" style="cursor:pointer">Anular</a></td></tr>
+                  <tr><td>2</td><td class="strong">El amor en los tiempos del cólera</td><td>María Rodríguez</td><td>23/05/2026</td><td>₲ 38.000</td><td><span class="badge badge-success">Completada</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Detalles</a><a class="link-red" style="cursor:pointer">Anular</a></td></tr>
+                  <tr><td>3</td><td class="strong">Ficciones</td><td>Jorge Fernández</td><td>22/05/2026</td><td>₲ 52.000</td><td><span class="badge badge-warning">Pendiente</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Detalles</a><a class="link-red" style="cursor:pointer">Anular</a></td></tr>
+                  <tr><td>4</td><td class="strong">Rayuela</td><td>Ana Martínez</td><td>21/05/2026</td><td>₲ 49.000</td><td><span class="badge badge-danger">Cancelada</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Detalles</a><a class="link-red" style="cursor:pointer">Anular</a></td></tr>
+                  <tr><td>5</td><td class="strong">Don Quijote de la Mancha</td><td>Luis Pérez</td><td>20/05/2026</td><td>₲ 65.000</td><td><span class="badge badge-success">Completada</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Detalles</a><a class="link-red" style="cursor:pointer">Anular</a></td></tr>
+                </tbody>
+              </table>
+              <div class="pagination"><span class="page-dot on">1</span><span class="page-dot">2</span><span class="page-dot">3</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- GESTOR · GESTIONAR RENTAS -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-gestor-rentas">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-book"/></svg>Libros Admin</div>
+            <div class="admin-item"><svg><use href="#i-dash"/></svg>Panel de control</div>
+            <div class="admin-item"><svg><use href="#i-upload"/></svg>Cargar libros</div>
+            <div class="admin-item"><svg><use href="#i-book"/></svg>Gestionar libros</div>
+            <div class="admin-item"><svg><use href="#i-cart"/></svg>Gestionar compras</div>
+            <div class="admin-item on"><svg><use href="#i-clock"/></svg>Gestionar rentas</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row"><div><h1 class="admin-h1">Gestionar rentas</h1><p class="admin-sub">Monitoreé las rentas de libros activas, devoluciones y alertas de retraso</p></div></div>
+            <div class="white-panel">
+              <div class="hd-table-title">Lista de alquileres y rentas</div>
+              <table class="table">
+                <thead><tr><th>S.N.</th><th>Nombre del libro</th><th>Arrendatario</th><th>Fecha inicio</th><th>Fecha devolución</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td class="strong">Cien años de soledad</td><td>Carlos Gómez</td><td>01/05/2026</td><td>15/05/2026</td><td><span class="badge badge-success">Activa</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Devolver</a><a class="link-blue" style="cursor:pointer">Extender</a></td></tr>
+                  <tr><td>2</td><td class="strong">Rayuela</td><td>Ana Martínez</td><td>10/05/2026</td><td>24/05/2026</td><td><span class="badge badge-success">Activa</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Devolver</a><a class="link-blue" style="cursor:pointer">Extender</a></td></tr>
+                  <tr><td>3</td><td class="strong">La ciudad y los perros</td><td>Andrés Silva</td><td>20/04/2026</td><td>04/05/2026</td><td><span class="badge badge-danger">Vencida</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Devolver</a><a class="link-blue" style="cursor:pointer">Extender</a></td></tr>
+                  <tr><td>4</td><td class="strong">Ficciones</td><td>Jorge Fernández</td><td>05/05/2026</td><td>19/05/2026</td><td><span class="badge badge-info">Devuelta</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Devolver</a><a class="link-blue" style="cursor:pointer">Extender</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODERADOR · COLA DE MODERACIÓN -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-moderacion">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-shield"/></svg>Libros Mod</div>
+            <div class="admin-item on"><svg><use href="#i-flag"/></svg>Cola de moderación</div>
+            <div class="admin-item"><svg><use href="#i-book"/></svg>Catálogo general</div>
+            <div class="admin-item"><svg><use href="#i-mail"/></svg>Denuncias de usuarios</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row"><div><h1 class="admin-h1">Cola de moderación</h1><p class="admin-sub">Revisá el contenido cargado por los gestores antes de que se publique</p></div></div>
+            <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+              <div class="stat-card"><div class="stat-label">Pendientes de revisión</div><div class="stat-value">9</div></div>
+              <div class="stat-card"><div class="stat-label">Aprobados hoy</div><div class="stat-value">14</div></div>
+              <div class="stat-card"><div class="stat-label">Rechazados hoy</div><div class="stat-value">2</div></div>
+            </div>
+            <div class="white-panel">
+              <div class="hd-table-title">Libros pendientes</div>
+              <table class="table">
+                <thead><tr><th>Libro</th><th>Gestor</th><th>Categoría</th><th>Enviado</th><th>Motivo de alerta</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#ffe3b0,#ffb98a)"></div><span class="strong">Ficciones</span></td><td>Editorial Sur</td><td>Ficción</td><td>hace 2 hs</td><td><span class="badge badge-neutral">Portada duplicada</span></td><td class="row-actions"><a class="link-green" style="cursor:pointer"><svg style="width:13px;height:13px;vertical-align:-2px"><use href="#i-check"/></svg> Aprobar</a><a class="link-red" style="cursor:pointer">Rechazar</a></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#d7cffb,#a998f2)"></div><span class="strong">Guía de inversión rápida</span></td><td>MoneyPress</td><td>Finanzas</td><td>hace 5 hs</td><td><span class="badge badge-warning">Descripción incompleta</span></td><td class="row-actions"><a class="link-green" style="cursor:pointer"><svg style="width:13px;height:13px;vertical-align:-2px"><use href="#i-check"/></svg> Aprobar</a><a class="link-red" style="cursor:pointer">Rechazar</a></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#bfe3d0,#8fcdae)"></div><span class="strong">Learning React</span></td><td>DevBooks</td><td>Tecnología</td><td>hace 1 día</td><td><span class="badge badge-neutral">Sin alertas</span></td><td class="row-actions"><a class="link-green" style="cursor:pointer"><svg style="width:13px;height:13px;vertical-align:-2px"><use href="#i-check"/></svg> Aprobar</a><a class="link-red" style="cursor:pointer">Rechazar</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ADMIN · USUARIOS -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-admin-usuarios">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-shield"/></svg>Libros Admin</div>
+            <div class="admin-item"><svg><use href="#i-dash"/></svg>Panel general</div>
+            <div class="admin-item on"><svg><use href="#i-users"/></svg>Usuarios</div>
+            <div class="admin-item"><svg><use href="#i-tag"/></svg>Promociones</div>
+            <div class="admin-item"><svg><use href="#i-chart"/></svg>Reportes</div>
+            <div class="admin-item"><svg><use href="#i-settings"/></svg>Configuración</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row">
+              <div><h1 class="admin-h1">Usuarios</h1><p class="admin-sub">Administrá cuentas, roles y permisos de la plataforma</p></div>
+              <button class="btn btn-dark btn-sm"><svg><use href="#i-plus"/></svg>Nuevo usuario</button>
+            </div>
+            <div class="white-panel">
+              <div style="display:flex;gap:10px;margin-bottom:16px">
+                <div class="input-icon" style="max-width:280px"><svg><use href="#i-search"/></svg><input class="input" placeholder="Buscar por nombre o correo"></div>
+                <select class="select" style="max-width:180px"><option>Todos los roles</option><option>Lector</option><option>Gestor</option><option>Moderador</option><option>Administrador</option></select>
+              </div>
+              <table class="table">
+                <thead><tr><th>Usuario</th><th>Correo</th><th>Rol</th><th>Alta</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="r-avatar" style="width:34px;height:34px;font-size:12px">HA</div><span class="strong">Heber Aranda</span></td><td>heber.aranda@correo.com</td><td><span class="badge badge-info">Lector</span></td><td>12/03/2026</td><td><span class="badge badge-success">Activo</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Editar</a><a class="link-red" style="cursor:pointer">Suspender</a></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="r-avatar" style="width:34px;height:34px;font-size:12px">ES</div><span class="strong">Editorial Sur</span></td><td>contacto@editorialsur.com</td><td><span class="badge badge-neutral">Gestor</span></td><td>02/01/2026</td><td><span class="badge badge-success">Activo</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Editar</a><a class="link-red" style="cursor:pointer">Suspender</a></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="r-avatar" style="width:34px;height:34px;font-size:12px">MJ</div><span class="strong">Marcos Jara</span></td><td>marcos.jara@correo.com</td><td><span class="badge badge-warning">Moderador</span></td><td>18/11/2025</td><td><span class="badge badge-success">Activo</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Editar</a><a class="link-red" style="cursor:pointer">Suspender</a></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="r-avatar" style="width:34px;height:34px;font-size:12px">DG</div><span class="strong">Diana Gutiérrez</span></td><td>diana.gutierrez@correo.com</td><td><span class="badge badge-info">Lector</span></td><td>05/06/2026</td><td><span class="badge badge-danger">Suspendido</span></td><td class="row-actions"><a class="link-blue" style="cursor:pointer">Editar</a><a class="link-green" style="cursor:pointer">Reactivar</a></td></tr>
+                </tbody>
+              </table>
+              <div class="pagination"><span class="page-dot on">1</span><span class="page-dot">2</span><span class="page-dot">3</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ADMIN · PROMOCIONES (cabecera-detalle) -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-admin-promos">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-shield"/></svg>Libros Admin</div>
+            <div class="admin-item"><svg><use href="#i-dash"/></svg>Panel general</div>
+            <div class="admin-item"><svg><use href="#i-users"/></svg>Usuarios</div>
+            <div class="admin-item on"><svg><use href="#i-tag"/></svg>Promociones</div>
+            <div class="admin-item"><svg><use href="#i-chart"/></svg>Reportes</div>
+            <div class="admin-item"><svg><use href="#i-settings"/></svg>Configuración</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row"><div><h1 class="admin-h1">Nueva promoción</h1><p class="admin-sub">Formulario cabecera–detalle: datos generales y libros incluidos</p></div></div>
+            <div class="white-panel" style="margin-bottom:18px">
+              <div class="hd-table-title" style="font-size:15px">Cabecera de la promoción</div>
+              <div class="grid-3">
+                <div class="field"><label>Nombre de la promoción *</label><input class="input" value="Semana del Libro 2026"></div>
+                <div class="field"><label>Descuento (%) *</label><input class="input" value="25"></div>
+                <div class="field"><label>Estado</label><select class="select"><option>Programada</option><option>Activa</option><option>Finalizada</option></select></div>
+              </div>
+              <div class="grid-2">
+                <div class="field"><label>Fecha de inicio *</label><input class="input" value="15/09/2026"></div>
+                <div class="field"><label>Fecha de fin *</label><input class="input" value="23/09/2026"></div>
+              </div>
+              <label style="display:flex;gap:8px;font-size:12.5px;color:var(--muted)"><input type="checkbox" checked>Notificar por correo a los usuarios suscriptos</label>
+            </div>
+            <div class="white-panel">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                <div class="hd-table-title" style="margin:0;font-size:15px">Detalle: libros incluidos</div>
+                <button class="btn btn-outline btn-sm"><svg><use href="#i-plus"/></svg>Agregar libro</button>
+              </div>
+              <table class="table">
+                <thead><tr><th>Libro</th><th>Precio normal</th><th>Precio promocional</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#2c2a55,#4a4590)"></div><span class="strong">Cien años de soledad</span></td><td>₲ 45.000</td><td style="color:var(--success-tx);font-weight:700">₲ 33.750</td><td><svg style="width:16px;height:16px;color:var(--muted-2);cursor:pointer"><use href="#i-trash"/></svg></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#d7cffb,#a998f2)"></div><span class="strong">Rayuela</span></td><td>₲ 49.000</td><td style="color:var(--success-tx);font-weight:700">₲ 36.750</td><td><svg style="width:16px;height:16px;color:var(--muted-2);cursor:pointer"><use href="#i-trash"/></svg></td></tr>
+                  <tr><td style="display:flex;gap:12px;align-items:center"><div class="avatar-thumb" style="background:linear-gradient(160deg,#bfe3d0,#8fcdae)"></div><span class="strong">Ficciones</span></td><td>₲ 52.000</td><td style="color:var(--success-tx);font-weight:700">₲ 39.000</td><td><svg style="width:16px;height:16px;color:var(--muted-2);cursor:pointer"><use href="#i-trash"/></svg></td></tr>
+                </tbody>
+              </table>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+                <button class="btn btn-outline">Guardar borrador</button>
+                <button class="btn btn-dark">Publicar promoción</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ADMIN · REPORTES -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-admin-reportes">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-shield"/></svg>Libros Admin</div>
+            <div class="admin-item"><svg><use href="#i-dash"/></svg>Panel general</div>
+            <div class="admin-item"><svg><use href="#i-users"/></svg>Usuarios</div>
+            <div class="admin-item"><svg><use href="#i-tag"/></svg>Promociones</div>
+            <div class="admin-item on"><svg><use href="#i-chart"/></svg>Reportes</div>
+            <div class="admin-item"><svg><use href="#i-settings"/></svg>Configuración</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row">
+              <div><h1 class="admin-h1">Reportes</h1><p class="admin-sub">Ventas, alquileres y desempeño de libros y promociones</p></div>
+              <div style="display:flex;gap:8px"><select class="select" style="width:160px"><option>Últimos 30 días</option><option>Este trimestre</option><option>Este año</option></select><button class="btn btn-outline btn-sm"><svg><use href="#i-download"/></svg>Exportar</button></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:20px">
+              <div class="badge-neutral" style="background:var(--ink);color:#fff;padding:8px 16px;border-radius:8px;font-weight:700;font-size:12.5px">Ventas</div>
+              <div class="badge-neutral" style="background:#fff;padding:8px 16px;border-radius:8px;font-weight:700;font-size:12.5px;color:var(--muted)">Alquileres</div>
+              <div class="badge-neutral" style="background:#fff;padding:8px 16px;border-radius:8px;font-weight:700;font-size:12.5px;color:var(--muted)">Libros y promociones</div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card"><div class="stat-label">Ingresos totales</div><div class="stat-value">₲ 18.6M</div><div class="stat-delta up">+9.2%</div></div>
+              <div class="stat-card"><div class="stat-label">Ventas completadas</div><div class="stat-value">312</div><div class="stat-delta up">+18</div></div>
+              <div class="stat-card"><div class="stat-label">Ticket promedio</div><div class="stat-value">₲ 59.600</div><div class="stat-delta down">-2.1%</div></div>
+              <div class="stat-card"><div class="stat-label">Devoluciones</div><div class="stat-value">7</div><div class="stat-delta up">+1</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px">
+              <div class="white-panel">
+                <div class="hd-table-title">Ingresos por mes</div>
+                <svg viewBox="0 0 460 170" style="width:100%;height:170px">
+                  <rect x="10" y="90" width="30" height="70" rx="4" fill="#5b4fe5" opacity=".85"/>
+                  <rect x="70" y="60" width="30" height="100" rx="4" fill="#5b4fe5" opacity=".85"/>
+                  <rect x="130" y="100" width="30" height="60" rx="4" fill="#5b4fe5" opacity=".85"/>
+                  <rect x="190" y="40" width="30" height="120" rx="4" fill="#5b4fe5" opacity=".85"/>
+                  <rect x="250" y="70" width="30" height="90" rx="4" fill="#5b4fe5" opacity=".85"/>
+                  <rect x="310" y="20" width="30" height="140" rx="4" fill="#5b4fe5" opacity=".85"/>
+                  <rect x="370" y="50" width="30" height="110" rx="4" fill="#5b4fe5" opacity=".85"/>
+                  <rect x="430" y="30" width="20" height="130" rx="4" fill="#5b4fe5" opacity=".4"/>
+                </svg>
+              </div>
+              <div class="white-panel">
+                <div class="hd-table-title">Distribución por categoría</div>
+                <svg viewBox="0 0 160 160" style="width:150px;height:150px;display:block;margin:0 auto 12px">
+                  <circle r="60" cx="80" cy="80" fill="transparent" stroke="#5b4fe5" stroke-width="26" stroke-dasharray="150 251" transform="rotate(-90 80 80)"/>
+                  <circle r="60" cx="80" cy="80" fill="transparent" stroke="#8fa8f2" stroke-width="26" stroke-dasharray="70 251" stroke-dashoffset="-150" transform="rotate(-90 80 80)"/>
+                  <circle r="60" cx="80" cy="80" fill="transparent" stroke="#f5b400" stroke-width="26" stroke-dasharray="31 251" stroke-dashoffset="-220" transform="rotate(-90 80 80)"/>
+                </svg>
+                <div style="font-size:12px;display:flex;justify-content:space-between;padding:4px 0"><span>● Ficción</span><b>60%</b></div>
+                <div style="font-size:12px;display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8fa8f2">● Cocina</span><b>28%</b></div>
+                <div style="font-size:12px;display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--star)">● Tecnología</span><b>12%</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ADMIN · CONFIGURACIÓN -->
+    <!-- ============================================================ -->
+    <section class="screen" id="screen-admin-config">
+      <div class="artboard">
+        <div class="admin-shell">
+          <aside class="admin-side">
+            <div class="admin-logo"><svg><use href="#i-shield"/></svg>Libros Admin</div>
+            <div class="admin-item"><svg><use href="#i-dash"/></svg>Panel general</div>
+            <div class="admin-item"><svg><use href="#i-users"/></svg>Usuarios</div>
+            <div class="admin-item"><svg><use href="#i-tag"/></svg>Promociones</div>
+            <div class="admin-item"><svg><use href="#i-chart"/></svg>Reportes</div>
+            <div class="admin-item on"><svg><use href="#i-settings"/></svg>Configuración</div>
+            <div class="admin-divider"></div>
+            <div class="admin-item"><svg><use href="#i-logout"/></svg>Cerrar sesión</div>
+            <div class="admin-item"><svg><use href="#i-help"/></svg>Ayuda</div>
+          </aside>
+          <div class="admin-main">
+            <div class="admin-title-row"><div><h1 class="admin-h1">Configuración</h1><p class="admin-sub">Parámetros generales del sistema, correos y promociones</p></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+              <div class="white-panel">
+                <div class="hd-table-title" style="font-size:15px">Notificaciones por correo</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-soft)"><div><div style="font-weight:600;font-size:13.5px">Confirmación de registro</div><div style="font-size:11.5px;color:var(--muted)">Se envía al crear una cuenta nueva</div></div><div style="width:38px;height:22px;background:var(--purple);border-radius:20px;position:relative"><div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:3px;right:3px"></div></div></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-soft)"><div><div style="font-weight:600;font-size:13.5px">Confirmación de compra / alquiler</div><div style="font-size:11.5px;color:var(--muted)">Se envía al completar una transacción</div></div><div style="width:38px;height:22px;background:var(--purple);border-radius:20px;position:relative"><div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:3px;right:3px"></div></div></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0"><div><div style="font-weight:600;font-size:13.5px">Notificaciones de promociones</div><div style="font-size:11.5px;color:var(--muted)">Envío automático a usuarios suscriptos</div></div><div style="width:38px;height:22px;background:var(--border);border-radius:20px;position:relative"><div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px"></div></div></div>
+                <div class="field" style="margin-top:16px"><label>Correo remitente</label><input class="input" value="no-responder@bigbooks.com"></div>
+              </div>
+              <div class="white-panel">
+                <div class="hd-table-title" style="font-size:15px">Tareas programadas</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-soft)"><div><div style="font-weight:600;font-size:13.5px">Verificación de alquileres vencidos</div><div style="font-size:11.5px;color:var(--muted)">Se ejecuta cada 6 horas</div></div><span class="badge badge-success">Activa</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0">
+                  <div><div style="font-weight:600;font-size:13.5px">Envío de promociones programadas</div><div style="font-size:11.5px;color:var(--muted)">Se ejecuta todos los días a las 08:00</div></div><span class="badge badge-success">Activa</span></div>
+                <div class="divider"></div>
+                <div class="field"><label>Días de aviso antes del vencimiento</label><input class="input" value="2"></div>
+                <div class="field"><label>Duración estándar de alquiler (días)</label><input class="input" value="7"></div>
+                <button class="btn btn-dark">Guardar configuración</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const meta = {
+  login:['Autenticación','Iniciar sesión','Formulario de acceso para usuarios registrados.'],
+  registro:['Autenticación','Registro','Alta de nuevos usuarios con validación de datos.'],
+  home:['Lector','Inicio','Página de bienvenida del catálogo, con destacados y búsqueda.'],
+  explorar:['Lector','Explorar catálogo','Listado de libros con filtros por género, precio y disponibilidad, y paginación.'],
+  detalle:['Lector','Detalle de libro','Ficha del libro con opción de comprar o alquilar.'],
+  carrito:['Lector','Carrito','Resumen de libros seleccionados antes de pagar.'],
+  checkout:['Lector','Pago','Datos de facturación y método de pago (simulado).'],
+  confirmacion:['Lector','Confirmación de pedido','Pantalla de éxito tras completar una compra o alquiler.'],
+  'mis-compras':['Lector','Mis compras','Historial de libros comprados, disponibles para descarga.'],
+  'mis-alquileres':['Lector','Mis alquileres','Historial de alquileres activos, vencidos y devueltos.'],
+  perfil:['Lector','Mi cuenta','Datos personales y preferencias del usuario.'],
+  contacto:['Lector','Contacto','Formulario de consultas hacia la administración.'],
+  'gestor-panel':['Gestor','Panel de control','Métricas de ventas, alquileres y libros publicados.'],
+  'gestor-cargar':['Gestor','Cargar libro','Formulario de carga de un nuevo libro al catálogo.'],
+  'gestor-libros':['Gestor','Gestionar libros','Listado de libros propios con edición y estado de publicación.'],
+  'gestor-compras':['Gestor','Gestionar compras','Historial de transacciones de compra de los libros del gestor.'],
+  'gestor-rentas':['Gestor','Gestionar rentas','Alquileres activos, vencidos y devueltos.'],
+  moderacion:['Moderador','Cola de moderación','Revisión de contenido cargado por gestores antes de publicarse.'],
+  'admin-usuarios':['Administrador','Usuarios','Gestión de cuentas, roles y permisos.'],
+  'admin-promos':['Administrador','Promociones','Formulario cabecera-detalle para crear promociones con libros asociados.'],
+  'admin-reportes':['Administrador','Reportes','Reportes de ventas, alquileres y desempeño de libros y promociones.'],
+  'admin-config':['Administrador','Configuración','Parámetros del sistema: correos, tareas programadas y promociones.'],
+};
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.querySelector('.nav-item[data-screen="'+id+'"]').classList.add('active');
+  const [g,t,d] = meta[id];
+  document.getElementById('ch-eyebrow').textContent = g;
+  document.getElementById('ch-title').textContent = t;
+  document.getElementById('ch-desc').textContent = d;
+  document.querySelector('.canvas').scrollTo(0,0);
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.nav-item').forEach(n=>{
+  n.addEventListener('click', ()=>show(n.dataset.screen));
+});
+show('home');
+</script>
+</body>
+</html>
