@@ -7,7 +7,7 @@ interface CartItemCardProps {
   coverSrc: string;
   title: string;
   authors: string[];
-  unitPrice: number;
+  unitPrice: number | null;
   quantity: number;
   href: string;
   onQuantityChange: (quantity: number) => void;
@@ -43,7 +43,9 @@ export default function CartItemCard({
             {authors.join(", ")}
           </p>
           <p className="text-base-content/60 mt-1 text-xs">
-            {formatGs(unitPrice)} Gs por unidad
+            {unitPrice === null
+              ? "Precio no disponible"
+              : `${formatGs(unitPrice)} Gs por unidad`}
           </p>
         </div>
         <div className="join shrink-0">
@@ -74,7 +76,9 @@ export default function CartItemCard({
         </div>
         <div className="w-28 shrink-0 text-right">
           <p className="text-sm font-extrabold">
-            {formatGs(unitPrice * quantity)} Gs
+            {unitPrice === null
+              ? "No disponible"
+              : `${formatGs(unitPrice * quantity)} Gs`}
           </p>
         </div>
         <button

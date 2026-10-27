@@ -1,10 +1,15 @@
+"use client";
+
 import BookCard from "@/common/components/BookCard";
 import HomeFooter from "@/common/components/HomeFooter";
 import HomeHero from "@/common/components/HomeHero";
+import LoadingSpinner from "@/common/components/LoadingSpinner";
+import NotificationToast from "@/common/components/NotificationToast";
 import Pagination from "@/common/components/Pagination";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
-import { BOOKS } from "@/common/data/books";
+import { useBookCatalog } from "@/common/hooks/useBookCatalog";
 import Link from "next/link";
+import { useState } from "react";
 
 const PROMO_COVERS = [
   "https://picsum.photos/seed/promo1/200/300",
@@ -15,10 +20,17 @@ const PROMO_COVERS = [
   "https://picsum.photos/seed/promo6/200/300",
 ];
 
+const PAGE_SIZE = 4;
+
 export default function Home() {
+  const { catalog, isLoading, isError } = useBookCatalog();
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(catalog.length / PAGE_SIZE));
+  const visibleBooks = catalog.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
-    <main className="bg-base-100 min-h-screen">
-      <ReaderNavbar active="inicio" initials="HA" />
+    <main className="bg-base-100 flex min-h-dvh flex-col">
+      <ReaderNavbar active="inicio" />
 
       <HomeHero />
 
@@ -26,20 +38,40 @@ export default function Home() {
         <h2 className="mb-8 text-center text-2xl font-extrabold">
           Libros más vendidos
         </h2>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {BOOKS.map((book) => (
-            <BookCard
-              key={book.id}
-              href={`/book/${book.id}`}
-              coverSrc={book.coverSrc}
-              price={book.price}
-              title={book.title}
-              authors={book.authors}
-              description={book.shortDescription}
+        {isLoading ? (
+          <LoadingSpinner label="Cargando libros" />
+        ) : isError ? (
+          <NotificationToast
+            type="error"
+            message="No se pudieron cargar los libros."
+            className="mx-auto my-10 w-full max-w-xl"
+          />
+        ) : catalog.length === 0 ? (
+          <p className="text-base-content/60 py-10 text-center">
+            Todavía no hay libros disponibles.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {visibleBooks.map((book) => (
+                <BookCard
+                  key={book.id}
+                  bookId={book.id}
+                  href={`/book/${book.id}`}
+                  coverSrc={book.coverSrc}
+                  price={book.price}
+                  title={book.title}
+                  authors={book.authors}
+                />
+              ))}
+            </div>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={setPage}
             />
-          ))}
-        </div>
-        <Pagination totalPages={4} />
+          </>
+        )}
       </section>
 
       <section className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-4 py-16 md:flex-row md:px-8">

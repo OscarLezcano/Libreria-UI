@@ -10,6 +10,7 @@ export type { ShippingData };
 
 interface ShippingFormProps {
   onSubmit: (data: ShippingData) => void;
+  initial?: ShippingData | null;
 }
 
 const EMPTY_DATA: ShippingData = {
@@ -19,8 +20,11 @@ const EMPTY_DATA: ShippingData = {
   telefono: "",
 };
 
-export default function ShippingForm({ onSubmit }: ShippingFormProps) {
-  const [data, setData] = useState<ShippingData>(EMPTY_DATA);
+export default function ShippingForm({
+  onSubmit,
+  initial,
+}: ShippingFormProps) {
+  const [data, setData] = useState<ShippingData>(initial ?? EMPTY_DATA);
 
   const update = (field: keyof ShippingData, value: string) =>
     setData((current) => ({
@@ -31,7 +35,7 @@ export default function ShippingForm({ onSubmit }: ShippingFormProps) {
 
   return (
     <form
-      className="card bg-base-100 card-border"
+      className="card bg-base-100 card-border min-h-[32rem] w-full"
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit(data);

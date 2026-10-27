@@ -1,6 +1,7 @@
 "use client";
 
 import { useCart } from "@/common/context/CartContext";
+import UserMenu from "@/common/components/UserMenu";
 import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
 
@@ -12,14 +13,11 @@ const MENU_ITEMS = [
 
 interface ReaderNavbarProps {
   active?: (typeof MENU_ITEMS)[number]["key"];
-  initials?: string;
 }
 
-export default function ReaderNavbar({
-  active = "inicio",
-  initials = "HA",
-}: ReaderNavbarProps) {
+export default function ReaderNavbar({ active = "inicio" }: ReaderNavbarProps) {
   const { count } = useCart();
+
   return (
     <header className="border-b border-base-300 bg-base-100">
       <div className="navbar mx-auto max-w-6xl px-4 lg:px-8">
@@ -61,11 +59,7 @@ export default function ReaderNavbar({
               <ShoppingCart className="size-5" strokeWidth={2} />
             </Link>
           </div>
-          <div className="avatar avatar-placeholder">
-            <div className="bg-primary/10 text-primary w-9 rounded-full">
-              <span className="text-sm font-bold">{initials}</span>
-            </div>
-          </div>
+          <UserMenu />
         </div>
       </div>
     </header>

@@ -3,67 +3,24 @@
 import BookCard from "@/common/components/BookCard";
 import ExploreFilters from "@/common/components/ExploreFilters";
 import HomeFooter from "@/common/components/HomeFooter";
+import LoadingSpinner from "@/common/components/LoadingSpinner";
+import NotificationToast from "@/common/components/NotificationToast";
 import Pagination from "@/common/components/Pagination";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
-import { BOOKS } from "@/common/data/books";
+import { useBookCatalog } from "@/common/hooks/useBookCatalog";
 import { useMemo, useState } from "react";
 
-const PAGE_SIZE = 8;
-
-const SORT_OPTIONS = [
-  { value: "relevancia", label: "Relevancia" },
-  { value: "precio-asc", label: "Precio: menor a mayor" },
-  { value: "precio-desc", label: "Precio: mayor a menor" },
-  { value: "titulo", label: "Título: A-Z" },
-] as const;
-
-type SortValue = (typeof SORT_OPTIONS)[number]["value"];
+const PAGE_SIZE = 25;
 
 export default function ExplorarPage() {
   const [query, setQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [sort, setSort] = useState<SortValue>("relevancia");
   const [page, setPage] = useState(1);
-
-  const categories = useMemo(() => {
-    const counts = new Map<string, number>();
-    BOOKS.forEach((book) =>
-      book.categories.forEach((category) =>
-        counts.set(category, (counts.get(category) ?? 0) + 1)
-      )
-    );
-    return [...counts.entries()]
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, []);
+  const { catalog, isLoading, isError } = useBookCatalog();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const result = BOOKS.filter((book) => {
-      const matchesQuery =
-        !q ||
-        book.title.toLowerCase().includes(q) ||
-        book.authors.some((author) => author.toLowerCase().includes(q)) ||
-        book.categories.some((category) => category.toLowerCase().includes(q));
-      const matchesCategories =
-        selectedCategories.length === 0 ||
-        book.categories.some((category) =>
-          selectedCategories.includes(category)
-        );
-      return matchesQuery && matchesCategories;
-    });
-
-    switch (sort) {
-      case "precio-asc":
-        return [...result].sort((a, b) => a.price - b.price);
-      case "precio-desc":
-        return [...result].sort((a, b) => b.price - a.price);
-      case "titulo":
-        return [...result].sort((a, b) => a.title.localeCompare(b.title));
-      default:
-        return result;
-    }
-  }, [query, selectedCategories, sort]);
+    return catalog.filter((book) => book.title.toLowerCase().includes(q));
+  }, [catalog, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -72,40 +29,34 @@ export default function ExplorarPage() {
     currentPage * PAGE_SIZE
   );
 
-  const clearFilters = () => {
+  const clearSearch = () => {
     setQuery("");
-    setSelectedCategories([]);
     setPage(1);
   };
 
-  const toggleCategory = (name: string) =>
-    setSelectedCategories((current) =>
-      current.includes(name)
-        ? current.filter((category) => category !== name)
-        : [...current, name]
-    );
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    setPage(1);
+  };
 
   return (
-    <main className="bg-base-100 min-h-screen">
-      <ReaderNavbar active="explorar" initials="HA" />
+    <main className="bg-base-100 flex min-h-dvh flex-col">
+      <ReaderNavbar active="explorar" />
 
-      <div className="mx-auto flex max-w-6xl flex-col lg:flex-row">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col lg:flex-row">
         <aside className="border-b border-base-300 lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">
           <ExploreFilters
             query={query}
-            onQueryChange={setQuery}
-            categories={categories}
-            selectedCategories={selectedCategories}
-            onToggleCategory={toggleCategory}
-            onClear={clearFilters}
+            onQueryChange={handleQueryChange}
+            onClear={clearSearch}
           />
         </aside>
 
-        <div className="flex-1 p-6 lg:p-8">
+        <div className="min-w-0 flex-1 p-6 lg:p-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <p className="text-base-content/60 text-sm">
               Mostrando <b className="text-base-content">{filtered.length}</b>{" "}
-              de <b className="text-base-content">{BOOKS.length}</b> resultados
+              de <b className="text-base-content">{catalog.length}</b> resultados
               {query.trim() && (
                 <>
                   {" "}
@@ -113,35 +64,27 @@ export default function ExplorarPage() {
                 </>
               )}
             </p>
-            <div className="flex items-center gap-2">
-              <span className="text-base-content/60 text-sm">Ordenar por:</span>
-              <label className="select select-sm w-48">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortValue)}
-                  aria-label="Ordenar resultados"
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
           </div>
 
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <LoadingSpinner label="Cargando libros" />
+          ) : isError ? (
+            <NotificationToast
+              type="error"
+              message="No se pudo cargar el catálogo. Intentá nuevamente más tarde."
+              className="my-10 w-full"
+            />
+          ) : filtered.length === 0 ? (
             <div className="text-center">
               <p className="text-lg font-bold">Sin resultados</p>
               <p className="text-base-content/60 mt-1 text-sm">
-                Probá con otros términos o quitá algunos filtros.
+                Probá con otro título.
               </p>
               <button
                 className="btn btn-outline btn-sm mt-4"
-                onClick={clearFilters}
+                onClick={clearSearch}
               >
-                Limpiar filtros
+                Limpiar búsqueda
               </button>
             </div>
           ) : (
@@ -150,12 +93,12 @@ export default function ExplorarPage() {
                 {visibleBooks.map((book) => (
                   <BookCard
                     key={book.id}
+                    bookId={book.id}
                     href={`/book/${book.id}`}
                     coverSrc={book.coverSrc}
                     price={book.price}
                     title={book.title}
                     authors={book.authors}
-                    description={book.shortDescription}
                   />
                 ))}
               </div>

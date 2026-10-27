@@ -1,11 +1,12 @@
 "use client";
 
 import { CreditCard, Lock } from "lucide-react";
-import { useState } from "react";
+import NotificationToast from "@/common/components/NotificationToast";
+import { useState, useSyncExternalStore } from "react";
 
 interface PaymentFormProps {
   total: number;
-  onPaid: () => void;
+  onPaid: () => Promise<void>;
 }
 
 const formatGs = (value: number) =>
@@ -19,6 +20,27 @@ const formatCardNumber = (digits: string) =>
 const formatExpiry = (digits: string) =>
   digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
 
+function subscribeToUserName(onChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
+
+function getAuthenticatedUserName() {
+  if (typeof window === "undefined") return "";
+  const storedUser = localStorage.getItem("bigbooks.user");
+  if (!storedUser) return "";
+
+  try {
+    const user: { name?: unknown; lastName?: unknown } = JSON.parse(storedUser);
+    return [user.name, user.lastName]
+      .filter((part): part is string => typeof part === "string" && Boolean(part.trim()))
+      .join(" ");
+  } catch {
+    return "";
+  }
+}
+
 function detectBrand(digits: string): string | null {
   if (/^4/.test(digits)) return "Visa";
   if (/^5[1-5]/.test(digits)) return "Mastercard";
@@ -27,22 +49,35 @@ function detectBrand(digits: string): string | null {
 }
 
 export default function PaymentForm({ total, onPaid }: PaymentFormProps) {
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [holder, setHolder] = useState("");
+  const [cardNumber, setCardNumber] = useState("4111111111111111");
+  const [expiry, setExpiry] = useState("1228");
+  const [cvv, setCvv] = useState("123");
+  const authenticatedUserName = useSyncExternalStore(
+    subscribeToUserName,
+    getAuthenticatedUserName,
+    () => ""
+  );
+  const [holder, setHolder] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const brand = detectBrand(cardNumber);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
     setProcessing(true);
-    // Pago simulado: no se procesan datos reales
-    window.setTimeout(() => {
+    try {
+      await onPaid();
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo completar el pedido. Intentá nuevamente."
+      );
+    } finally {
       setProcessing(false);
-      onPaid();
-    }, 1500);
+    }
   };
 
   return (
@@ -50,6 +85,7 @@ export default function PaymentForm({ total, onPaid }: PaymentFormProps) {
       className="card bg-base-100 card-border"
       onSubmit={handleSubmit}
       aria-busy={processing}
+      autoComplete="off"
     >
       <div className="card-body gap-5">
         <div className="flex items-center justify-between">
@@ -59,9 +95,9 @@ export default function PaymentForm({ total, onPaid }: PaymentFormProps) {
             Bancard
           </span>
         </div>
-        <p className="text-base-content/60 -mt-2 text-xs">
-          Pago simulado — no se procesan datos reales.
-        </p>
+        {error && (
+          <NotificationToast type="error" message={error} className="text-sm" />
+        )}
 
         <fieldset className="fieldset">
           <legend className="fieldset-legend">Número de tarjeta</legend>
@@ -69,7 +105,6 @@ export default function PaymentForm({ total, onPaid }: PaymentFormProps) {
             <CreditCard className="size-4 opacity-50" strokeWidth={2} />
             <input
               inputMode="numeric"
-              autoComplete="cc-number"
               required
               placeholder="4111 1111 1111 1111"
               value={formatCardNumber(cardNumber)}
@@ -91,7 +126,6 @@ export default function PaymentForm({ total, onPaid }: PaymentFormProps) {
             <input
               className="input w-full"
               inputMode="numeric"
-              autoComplete="cc-exp"
               required
               placeholder="MM/AA"
               value={formatExpiry(expiry)}
@@ -105,7 +139,6 @@ export default function PaymentForm({ total, onPaid }: PaymentFormProps) {
               <Lock className="size-4 opacity-50" strokeWidth={2} />
               <input
                 inputMode="numeric"
-                autoComplete="cc-csc"
                 required
                 maxLength={4}
                 placeholder="123"
@@ -122,10 +155,9 @@ export default function PaymentForm({ total, onPaid }: PaymentFormProps) {
           <legend className="fieldset-legend">Titular de la tarjeta</legend>
           <input
             className="input w-full"
-            autoComplete="cc-name"
             required
             placeholder="Como figura en la tarjeta"
-            value={holder}
+            value={holder ?? authenticatedUserName}
             onChange={(e) => setHolder(e.target.value)}
           />
         </fieldset>

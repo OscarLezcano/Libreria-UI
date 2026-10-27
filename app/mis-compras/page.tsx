@@ -24,8 +24,8 @@ export default function MisComprasPage() {
   );
 
   return (
-    <main className="bg-base-100 min-h-screen">
-      <ReaderNavbar active="compras" initials="HA" />
+    <main className="bg-base-100 flex min-h-dvh flex-col">
+      <ReaderNavbar active="compras" />
 
       <div className="mx-auto max-w-6xl px-4 py-10 lg:px-8">
         <h1 className="text-2xl font-extrabold">Mis compras</h1>

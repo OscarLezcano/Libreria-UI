@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
-  const { items, setShipping } = useCart();
+  const { items, shipping, setShipping } = useCart();
   const router = useRouter();
 
   const handleSubmit = (data: ShippingData) => {
@@ -18,8 +18,8 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="bg-base-100 min-h-screen">
-        <ReaderNavbar active="compras" initials="HA" />
+      <main className="bg-base-100 flex min-h-dvh flex-col">
+        <ReaderNavbar active="compras" />
         <div className="mx-auto max-w-6xl px-4 py-20 text-center lg:px-8">
           <p className="text-lg font-bold">No hay pedidos para confirmar</p>
           <p className="text-base-content/60 mt-1 text-sm">
@@ -35,17 +35,17 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="bg-base-100 min-h-screen">
-      <ReaderNavbar active="compras" initials="HA" />
+    <main className="bg-base-100 flex min-h-dvh flex-col">
+      <ReaderNavbar active="compras" />
 
-      <div className="mx-auto max-w-6xl px-4 py-10 lg:px-8">
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 lg:px-8">
         <h1 className="text-2xl font-extrabold">Confirmar y pagar</h1>
         <p className="text-base-content/60 mt-1 text-sm">
           Completá los datos de envío para tu pedido
         </p>
 
-        <div className="mt-6">
-          <ShippingForm onSubmit={handleSubmit} />
+        <div className="mx-auto mt-6 w-full max-w-3xl">
+          <ShippingForm initial={shipping} onSubmit={handleSubmit} />
         </div>
       </div>
 

@@ -132,7 +132,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const clear = useCallback(() => writeItems([]), []);
+  const clear = useCallback(() => writeState(EMPTY_STATE), []);
 
   const setCoupon = useCallback(
     (code: string | null) => writeState({ ...readSnapshot(), coupon: code }),

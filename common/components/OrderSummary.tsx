@@ -2,17 +2,22 @@
 
 import { useCart } from "@/common/context/CartContext";
 import { couponDiscount, findCoupon } from "@/common/data/coupons";
+import NotificationToast from "@/common/components/NotificationToast";
 import Link from "next/link";
 import { useState } from "react";
 
 interface OrderSummaryProps {
   subtotal: number;
+  canCheckout?: boolean;
 }
 
 const formatGs = (value: number) =>
   new Intl.NumberFormat("es-PY").format(value);
 
-export default function OrderSummary({ subtotal }: OrderSummaryProps) {
+export default function OrderSummary({
+  subtotal,
+  canCheckout = true,
+}: OrderSummaryProps) {
   const { coupon, setCoupon } = useCart();
   const [couponCode, setCouponCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +25,7 @@ export default function OrderSummary({ subtotal }: OrderSummaryProps) {
   const appliedCoupon = coupon ? findCoupon(coupon) : undefined;
   const discount = appliedCoupon ? couponDiscount(appliedCoupon, subtotal) : 0;
   const total = Math.max(0, subtotal - discount);
+  const checkoutDisabled = !canCheckout || subtotal <= 0;
 
   const applyCoupon = () => {
     const found = findCoupon(couponCode);
@@ -63,14 +69,18 @@ export default function OrderSummary({ subtotal }: OrderSummaryProps) {
             </button>
           </div>
           {error && (
-            <p className="text-error mt-2 text-xs" role="alert">
-              {error}
-            </p>
+            <NotificationToast
+              type="error"
+              message={error}
+              className="mt-2 text-xs"
+            />
           )}
           {appliedCoupon && (
-            <p className="text-success mt-2 text-xs">
-              {appliedCoupon.code}: {appliedCoupon.description}
-            </p>
+            <NotificationToast
+              type="success"
+              message={`${appliedCoupon.code}: ${appliedCoupon.description}`}
+              className="mt-2 text-xs"
+            />
           )}
         </div>
 
@@ -86,10 +96,10 @@ export default function OrderSummary({ subtotal }: OrderSummaryProps) {
         </div>
         <Link
           href="/checkout"
-          className={`btn btn-block ${total === 0 ? "btn-disabled" : "btn-primary"}`}
-          tabIndex={total === 0 ? -1 : 0}
+          className={`btn btn-block ${checkoutDisabled ? "btn-disabled" : "btn-primary"}`}
+          tabIndex={checkoutDisabled ? -1 : 0}
           role="button"
-          aria-disabled={total === 0}
+          aria-disabled={checkoutDisabled}
         >
           Continuar
         </Link>
