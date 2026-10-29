@@ -34,13 +34,63 @@ export async function createOrderRequest(
   return String(id);
 }
 
+export interface OrderItem {
+  bookId: number | string;
+  quantity: number;
+  price?: number;
+  book?: {
+    id?: number | string;
+    title?: string;
+    authors?: string[];
+    coverSrc?: string;
+  };
+}
+
+export interface Order {
+  id: string | number;
+  orderId?: string | number;
+  items: OrderItem[];
+  status: string;
+  createdAt?: string;
+  date?: string;
+  createdDate?: string;
+  couponCode?: string | null;
+  total?: number;
+  [key: string]: unknown;
+}
+
+export async function getMyOrders(): Promise<Order[]> {
+  const response = await fetch(`${SALES_API_URL}/orders`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("No se pudieron cargar tus compras");
+  }
+
+  const result: unknown = await response.json();
+
+  if (Array.isArray(result)) return result as Order[];
+  if (result && typeof result === "object") {
+    const obj = result as Record<string, unknown>;
+    if (Array.isArray(obj.data)) return obj.data as Order[];
+    if (Array.isArray(obj.orders)) return obj.orders as Order[];
+    if (Array.isArray(obj.items)) return obj.items as Order[];
+    if (Array.isArray(obj.content)) return obj.content as Order[];
+    if (Array.isArray(obj.results)) return obj.results as Order[];
+  }
+  return [];
+}
+
 // export async function markOrderAsPaidRequest(orderId: string): Promise<void> {
 //   const response = await fetch(`${SALES_API_URL}/orders/${orderId}/status`, {
 //     method: "PUT",
 //     headers: getAuthHeaders(),
 //     body: JSON.stringify({ status: "PAID" }),
 //   });
-
+//
 //   if (!response.ok) {
 //     throw new Error("El pedido se creó, pero no se pudo confirmar el pago.");
 //   }
