@@ -1,7 +1,7 @@
 "use client";
 
 import AddToCartButton from "@/common/components/AddToCartButton";
-import { Minus, Plus } from "lucide-react";
+import QuantitySelector from "@/common/components/QuantitySelector";
 import { useState } from "react";
 
 interface BookPurchaseCardProps {
@@ -30,32 +30,11 @@ export default function BookPurchaseCard({
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-sm font-bold">Cantidad</span>
-          <div className="join">
-            <button
-              className="btn btn-neutral join-item btn-sm"
-              aria-label="Disminuir cantidad"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            >
-              <Minus className="size-3" strokeWidth={2.5} />
-            </button>
-            <input
-              type="number"
-              min={1}
-              value={quantity}
-              aria-label="Cantidad"
-              onChange={(e) =>
-                setQuantity(Math.max(1, Number(e.target.value) || 1))
-              }
-              className="input input-sm join-item w-16 text-center"
-            />
-            <button
-              className="btn btn-neutral join-item btn-sm"
-              aria-label="Aumentar cantidad"
-              onClick={() => setQuantity((q) => q + 1)}
-            >
-              <Plus className="size-3" strokeWidth={2.5} />
-            </button>
-          </div>
+          <QuantitySelector
+            value={quantity}
+            onChange={setQuantity}
+            label="Cantidad"
+          />
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-base-content/60">Total</span>

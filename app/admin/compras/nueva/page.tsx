@@ -1,58 +1,92 @@
 "use client";
 
-import AdminNavbar from "@/common/components/AdminNavbar";
+import LoadingSpinner from "@/common/components/LoadingSpinner";
+import NotificationToast from "@/common/components/NotificationToast";
 import PurchaseItemsSection, {
+  type PurchaseBook,
   type PurchaseItem,
 } from "@/common/components/PurchaseItemsSection";
-import { getBook } from "@/common/data/books";
-import { PURCHASE_ORDERS } from "@/common/data/purchaseOrders";
+import type { BookRecord } from "@/common/services/books";
+import { getBooksPageRequest } from "@/common/services/books";
+import { createPurchaseRequest } from "@/common/services/purchases";
+import { getAllSuppliersRequest } from "@/common/services/suppliers";
+import { getAuthenticatedWarehouseId } from "@/common/services/auth";
 import {
-  PURCHASE_STATUS_OPTIONS,
-  SUPPLIERS,
-  type PurchaseStatus,
-} from "@/common/data/suppliers";
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 
-const DEFAULT_ITEMS: PurchaseItem[] = [
-  { bookId: "mystery-of-the-lost-island", quantity: 10, unitCost: 68000 },
-  { bookId: "cooking-made-easy", quantity: 5, unitCost: 45000 },
-];
-
-function NuevaCompraForm() {
-  const searchParams = useSearchParams();
-  const orderId = searchParams.get("id");
-  const order = orderId
-    ? PURCHASE_ORDERS.find((o) => o.id === orderId)
-    : undefined;
-
-  const [supplierId, setSupplierId] = useState(order?.supplierId ?? "");
-  const [invoiceNumber, setInvoiceNumber] = useState(
-    order?.invoiceNumber ?? ""
+function toPurchaseBooks(records: BookRecord[]): PurchaseBook[] {
+  return records.flatMap((book) =>
+    book.id !== null && book.title
+      ? [
+          {
+            id: String(book.id),
+            title: book.title,
+            coverUrl: book.coverUrl,
+          },
+        ]
+      : []
   );
-  const [status, setStatus] = useState<PurchaseStatus>(
-    order?.status ?? "PENDING"
-  );
-  const [items, setItems] = useState<PurchaseItem[]>(
-    order ? order.items.map((item) => ({ ...item })) : DEFAULT_ITEMS
-  );
+}
 
-  const addItem = (bookId: string) => {
-    const book = getBook(bookId);
+export default function NuevaCompraPage() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const [supplierId, setSupplierId] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [items, setItems] = useState<PurchaseItem[]>([]);
+  const [isBookPickerOpen, setIsBookPickerOpen] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const suppliersQuery = useQuery({
+    queryKey: ["suppliers", "catalog"],
+    queryFn: getAllSuppliersRequest,
+    staleTime: 60_000,
+  });
+  const booksQuery = useInfiniteQuery({
+    queryKey: ["books", "purchase-picker"],
+    queryFn: ({ pageParam }) => getBooksPageRequest(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    enabled: isBookPickerOpen,
+    staleTime: 60_000,
+  });
+  const books = toPurchaseBooks(
+    booksQuery.data?.pages.flatMap((page) => page.books) ?? []
+  );
+  const createMutation = useMutation({
+    mutationFn: createPurchaseRequest,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["purchases"] });
+      router.push("/admin/compras");
+    },
+    onError: (error) => {
+      setFormError(
+        error instanceof Error ? error.message : "No se pudo registrar la compra."
+      );
+    },
+  });
+  const isLoading = suppliersQuery.isPending;
+  const hasError = suppliersQuery.isError;
+
+  const addItem = (bookId: string, quantity = 1) => {
+    const book = books.find((candidate) => candidate.id === bookId);
     if (!book || items.some((item) => item.bookId === bookId)) return;
-    const suggestedCost = Math.round((book.price * 0.65) / 500) * 500;
+
     setItems((current) => [
       ...current,
-      { bookId, quantity: 1, unitCost: suggestedCost },
+      { bookId, quantity, unitCost: 0 },
     ]);
   };
 
   const removeItem = (bookId: string) =>
-    setItems((current) =>
-      current.filter((item) => item.bookId !== bookId)
-    );
+    setItems((current) => current.filter((item) => item.bookId !== bookId));
 
   const changeItem = (
     bookId: string,
@@ -64,129 +98,156 @@ function NuevaCompraForm() {
       )
     );
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError(null);
+
+    if (!supplierId || items.length === 0) {
+      setFormError("Seleccioná un proveedor y agregá al menos un libro.");
+      return;
+    }
+
+    const warehouseId = getAuthenticatedWarehouseId();
+    if (warehouseId === null) {
+      setFormError("Tu usuario no tiene un almacén asignado.");
+      return;
+    }
+
+    createMutation.mutate({
+      warehouseId,
+      supplierId: Number(supplierId),
+      invoiceNumber: invoiceNumber.trim(),
+      items: items.map((item) => ({
+        bookId: Number(item.bookId),
+        quantity: item.quantity,
+        unitCost: item.unitCost,
+      })),
+    });
+  };
+
   return (
-    <div className="bg-base-200 min-h-dvh">
-      <AdminNavbar active="Compras" initials="HA" />
-
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-extrabold">
-              {order ? `Compra ${order.id}` : "Registrar Nueva Compra"}
-            </h1>
-            <p className="text-base-content/60 mt-1 text-sm">
-              {order
-                ? `Factura ${order.invoiceNumber} · ${order.date}`
-                : "Cargá la factura del proveedor y agregá los libros recibidos o pendientes."}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/admin/compras" className="btn btn-ghost">
-              Cancelar
-            </Link>
-            <button type="button" className="btn btn-neutral">
-              Guardar Compra
-            </button>
-          </div>
+    <main className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold">Registrar Nueva Compra</h1>
+          <p className="text-base-content/60 mt-1 text-sm">
+            Cargá la factura del proveedor y agregá los libros comprados.
+          </p>
         </div>
+        <div className="flex items-center gap-3">
+          <Link href="/admin/compras" className="btn btn-ghost">
+            Cancelar
+          </Link>
+          <button
+            type="submit"
+            form="purchase-form"
+            className="btn btn-neutral"
+            disabled={isLoading || hasError || createMutation.isPending || items.length === 0}
+          >
+            {createMutation.isPending ? (
+              <span className="loading loading-spinner loading-sm" />
+            ) : (
+              "Guardar Compra"
+            )}
+          </button>
+        </div>
+      </div>
 
+      {formError && (
+        <NotificationToast
+          type="error"
+          message={formError}
+          className="mb-6"
+        />
+      )}
+
+      {isLoading ? (
+        <LoadingSpinner label="Cargando proveedores y libros" />
+      ) : hasError ? (
+        <NotificationToast
+          type="error"
+          message="No se pudieron cargar los proveedores. Intentá nuevamente más tarde."
+          className="my-6"
+        />
+      ) : (
         <div className="flex flex-col gap-6">
-          <section className="card bg-base-100 card-border">
-            <div className="card-body">
-              <h2 className="card-title border-b border-base-200 pb-2 text-lg">
-                Datos de la Factura y Proveedor
-              </h2>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-                <fieldset className="fieldset">
-                  <legend className="fieldset-legend">
-                    Proveedor <span className="text-error">*</span>
-                  </legend>
-                  <div className="flex gap-2">
-                    <select
-                      className="select flex-1"
-                      required
-                      value={supplierId}
-                      onChange={(e) => setSupplierId(e.target.value)}
-                    >
-                      <option value="" disabled>
-                        Seleccione un proveedor
-                      </option>
-                      {SUPPLIERS.map((supplier) => (
-                        <option key={supplier.id} value={supplier.id}>
-                          {supplier.name} (RUC: {supplier.ruc})
+          <form id="purchase-form" onSubmit={handleSubmit}>
+            <section className="card bg-base-100 card-border">
+              <div className="card-body">
+                <h2 className="card-title border-b border-base-200 pb-2 text-lg">
+                  Datos de la Factura y Proveedor
+                </h2>
+                <p className="text-base-content/60 text-sm">
+                  La compra se registrará como pendiente. Podés aceptarla desde
+                  el historial cuando llegue la mercadería.
+                </p>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <fieldset className="fieldset">
+                    <legend className="fieldset-legend">
+                      Proveedor <span className="text-error">*</span>
+                    </legend>
+                    <div className="flex gap-2">
+                      <select
+                        className="select flex-1"
+                        required
+                        value={supplierId}
+                        onChange={(event) => setSupplierId(event.target.value)}
+                      >
+                        <option value="" disabled>
+                          Seleccione un proveedor
                         </option>
-                      ))}
-                    </select>
-                    <Link
-                      href="/admin/proveedores"
-                      className="btn btn-square"
-                      title="Agregar proveedor"
-                      aria-label="Agregar proveedor"
-                    >
-                      <Plus className="size-4" strokeWidth={2.5} />
-                    </Link>
-                  </div>
-                </fieldset>
+                        {suppliersQuery.data?.map((supplier) => (
+                          <option key={supplier.id} value={supplier.id}>
+                            {supplier.name} (RUC: {supplier.ruc})
+                          </option>
+                        ))}
+                      </select>
+                      <Link
+                        href="/admin/proveedores"
+                        className="btn btn-square"
+                        title="Agregar proveedor"
+                        aria-label="Agregar proveedor"
+                      >
+                        <Plus className="size-4" strokeWidth={2.5} />
+                      </Link>
+                    </div>
+                  </fieldset>
 
-                <fieldset className="fieldset">
-                  <legend className="fieldset-legend">
-                    Nº Factura <span className="text-error">*</span>
-                  </legend>
-                  <input
-                    type="text"
-                    className="input"
-                    required
-                    placeholder="Ej: 001-001-00001234"
-                    value={invoiceNumber}
-                    onChange={(e) => setInvoiceNumber(e.target.value)}
-                  />
-                </fieldset>
-
-                <fieldset className="fieldset">
-                  <legend className="fieldset-legend">
-                    Estado de Compra <span className="text-error">*</span>
-                  </legend>
-                  <select
-                    className="select"
-                    required
-                    value={status}
-                    onChange={(e) =>
-                      setStatus(e.target.value as PurchaseStatus)
-                    }
-                  >
-                    {PURCHASE_STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </fieldset>
+                  <fieldset className="fieldset">
+                    <legend className="fieldset-legend">
+                      Nº Factura <span className="text-error">*</span>
+                    </legend>
+                    <input
+                      type="text"
+                      className="input"
+                      required
+                      placeholder="Ej: 001-001-00001234"
+                      value={invoiceNumber}
+                      onChange={(event) => setInvoiceNumber(event.target.value)}
+                    />
+                  </fieldset>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </form>
 
           <PurchaseItemsSection
             items={items}
+            books={books}
             onAdd={addItem}
             onRemove={removeItem}
             onItemChange={changeItem}
+            isBookPickerOpen={isBookPickerOpen}
+            onOpenBookPicker={() => setIsBookPickerOpen(true)}
+            onCloseBookPicker={() => setIsBookPickerOpen(false)}
+            hasMoreBooks={booksQuery.hasNextPage}
+            isLoadingMoreBooks={booksQuery.isFetchingNextPage}
+            booksError={booksQuery.isError}
+            onLoadMoreBooks={() => void booksQuery.fetchNextPage()}
+            onRetryBooks={() => void booksQuery.refetch()}
           />
         </div>
-      </main>
-    </div>
-  );
-}
-
-export default function NuevaCompraPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="bg-base-200 flex min-h-dvh items-center justify-center">
-          <span className="loading loading-dots loading-lg text-primary" />
-        </div>
-      }
-    >
-      <NuevaCompraForm />
-    </Suspense>
+      )}
+    </main>
   );
 }

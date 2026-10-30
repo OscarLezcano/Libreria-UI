@@ -1,8 +1,10 @@
 "use client";
 
 import type { bookInputType } from "@/common/schemas/book/BookInputSchema";
+import { searchCatalogRequest } from "@/common/services/books";
+import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface BookFormProps {
   initial?: bookInputType | null;
@@ -20,27 +22,63 @@ const EMPTY = {
   genres: [] as string[],
 };
 
+function normalizeTag(tag: string): string {
+  return tag
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 function TagList({
   label,
+  resource,
   required,
   tags,
   onChange,
   placeholder,
 }: {
   label: string;
+  resource: "authors" | "genres";
   required?: boolean;
   tags: string[];
   onChange: (tags: string[]) => void;
   placeholder: string;
 }) {
   const [draft, setDraft] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
-  const addTag = () => {
-    const value = draft.trim();
-    if (value && !tags.includes(value)) {
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setSearchTerm(draft.trim()), 200);
+    return () => window.clearTimeout(timeout);
+  }, [draft]);
+
+  const suggestionsQuery = useQuery({
+    queryKey: ["catalog-suggestions", resource, searchTerm],
+    queryFn: () => searchCatalogRequest(resource, searchTerm),
+    enabled: isFocused && searchTerm.length > 0,
+    staleTime: 30_000,
+  });
+  const suggestions = (suggestionsQuery.data ?? []).flatMap((entity) => {
+    const name = entity.name;
+    if (!name || tags.some((tag) => normalizeTag(tag) === normalizeTag(name))) {
+      return [];
+    }
+    return [{ ...entity, name }];
+  });
+  const showSuggestions = isFocused && draft.trim().length > 0;
+
+  const addTag = (tag = draft) => {
+    const value = tag.trim();
+    if (
+      value &&
+      !tags.some((existing) => normalizeTag(existing) === normalizeTag(value))
+    ) {
       onChange([...tags, value]);
     }
     setDraft("");
+    setIsFocused(false);
   };
 
   return (
@@ -49,22 +87,71 @@ function TagList({
         {label} {required && <span className="text-error">*</span>}
       </legend>
       <div className="flex gap-2">
-        <input
-          className="input input-sm flex-1"
-          placeholder={placeholder}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              addTag();
+        <div className="relative min-w-0 flex-1">
+          <input
+            className="input input-sm w-full"
+            placeholder={placeholder}
+            value={draft}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={showSuggestions}
+            aria-controls={
+              showSuggestions && suggestions.length > 0
+                ? `${resource}-suggestions`
+                : undefined
             }
-          }}
-        />
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTag();
+              }
+            }}
+          />
+          {showSuggestions && (
+            <div className="absolute top-full z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-box border border-base-300 bg-base-100 shadow-lg">
+              {draft.trim() !== searchTerm || suggestionsQuery.isFetching ? (
+                <p className="px-3 py-2 text-sm text-base-content/60">
+                  Buscando...
+                </p>
+              ) : suggestionsQuery.isError ? (
+                <p className="px-3 py-2 text-sm text-error" role="alert">
+                  No se pudieron buscar coincidencias.
+                </p>
+              ) : suggestions.length > 0 ? (
+                <ul
+                  id={`${resource}-suggestions`}
+                  className="menu menu-sm w-full p-1"
+                  role="listbox"
+                >
+                  {suggestions.map((entity) => (
+                    <li key={entity.id ?? entity.name}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={false}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => addTag(entity.name)}
+                      >
+                        {entity.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="px-3 py-2 text-sm text-base-content/60">
+                  Sin coincidencias. Usa “Agregar” para incluirlo como nuevo.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
         <button
           type="button"
           className="btn btn-neutral btn-sm"
-          onClick={addTag}
+          onClick={() => addTag()}
         >
           Agregar
         </button>
@@ -122,7 +209,7 @@ export default function BookForm({
             Título <span className="text-error">*</span>
           </legend>
           <input
-            className="input"
+            className="input w-full"
             required
             placeholder="Ej: El Gran Libro de Cocina"
             value={form.title}
@@ -145,20 +232,19 @@ export default function BookForm({
         </fieldset>
 
         <fieldset className="fieldset">
-          <legend className="fieldset-legend">Precio (Gs.)</legend>
+          <legend className="fieldset-legend">
+            Precio (Gs.) <span className="text-error">*</span>
+          </legend>
           <input
             type="number"
+            required
             min={0}
             step={1000}
             className="input"
-            placeholder="Dejar vacío si aún no tiene precio"
+            placeholder="Ej: 150000"
             value={form.price}
             onChange={(e) => update("price", e.target.value)}
           />
-          <p className="fieldset-hint">
-            El precio se expresa en guaraníes. Se guarda como null si está
-            vacío.
-          </p>
         </fieldset>
 
         <fieldset className="fieldset">
@@ -184,6 +270,7 @@ export default function BookForm({
 
         <TagList
           label="Autores"
+          resource="authors"
           tags={form.authors}
           onChange={(tags) => update("authors", tags)}
           placeholder="Ej: Gabriel García Márquez"
@@ -191,6 +278,7 @@ export default function BookForm({
 
         <TagList
           label="Géneros"
+          resource="genres"
           tags={form.genres}
           onChange={(tags) => update("genres", tags)}
           placeholder="Ej: Novela, Misterio"

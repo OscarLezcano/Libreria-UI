@@ -5,12 +5,8 @@ export const bookInputSchema = z.object({
   description: z.string().min(1, "La descripción es obligatoria"),
   price: z
     .string()
-    .optional()
-    .refine(
-      (value) =>
-        value === undefined || value === "" || /^\d+$/.test(value),
-      "El precio debe ser un número entero en guaraníes"
-    ),
+    .min(1, "El precio es obligatorio")
+    .regex(/^\d+$/, "El precio debe ser un número entero en guaraníes"),
   coverUrl: z
     .string()
     .url("Debe ser una URL válida")

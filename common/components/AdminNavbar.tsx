@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const ADMIN_MENU = [
   { label: "Inicio", href: "/" },
@@ -8,15 +11,14 @@ const ADMIN_MENU = [
   { label: "Proveedores", href: "/admin/proveedores" },
 ] as const;
 
-interface AdminNavbarProps {
-  active?: string;
-  initials?: string;
-}
+export default function AdminNavbar() {
+  const pathname = usePathname();
+  const active = pathname.startsWith("/admin/libros")
+    ? "Catálogo"
+    : pathname.startsWith("/admin/proveedores")
+      ? "Proveedores"
+      : "Compras";
 
-export default function AdminNavbar({
-  active = "Compras",
-  initials = "HA",
-}: AdminNavbarProps) {
   return (
     <header className="border-b border-base-300 bg-base-100">
       <div className="navbar mx-auto max-w-6xl px-4 lg:px-8">
@@ -46,7 +48,7 @@ export default function AdminNavbar({
         <div className="navbar-end">
           <div className="avatar avatar-placeholder">
             <div className="bg-primary/10 text-primary w-8 rounded-full">
-              <span className="text-xs font-bold">{initials}</span>
+              <span className="text-xs font-bold">HA</span>
             </div>
           </div>
         </div>

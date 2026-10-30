@@ -1,10 +1,8 @@
 import type { bookInputType } from "@/common/schemas/book/BookInputSchema";
-import { getAuthHeaders } from "@/common/services/http";
+import { apiUrl, getAuthHeaders } from "@/common/services/http";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const STOCK_API_URL =
-  process.env.NEXT_PUBLIC_STOCK_API_URL ?? "http://localhost:8080/stock";
 const API_PAGE_SIZE = 25;
+type CatalogResource = "authors" | "genres";
 
 export interface BookRecord {
   id: number | null;
@@ -28,18 +26,29 @@ interface ListResponse<T> {
   };
 }
 
+export interface BooksPage {
+  books: BookRecord[];
+  nextPage: number | undefined;
+}
+
 interface ItemResponse<T> {
   data: T;
 }
 
-async function getAllPages<T>(resource: string): Promise<T[]> {
+async function getAllPages<T>(resource: string, name?: string): Promise<T[]> {
   const items: T[] = [];
   let page = 0;
   let hasNextPage = true;
 
   while (hasNextPage) {
+    const query = new URLSearchParams({
+      page: String(page),
+      size: String(API_PAGE_SIZE),
+    });
+    if (name) query.set("name", name);
+
     const response = await fetch(
-      `${STOCK_API_URL}/${resource}?page=${page}&size=${API_PAGE_SIZE}`,
+      apiUrl(`stock/${resource}?${query.toString()}`),
       { headers: getAuthHeaders() }
     );
 
@@ -63,10 +72,35 @@ export function getBooksRequest(): Promise<BookRecord[]> {
   return getAllPages<BookRecord>("books");
 }
 
+export async function getBooksPageRequest(page: number): Promise<BooksPage> {
+  const query = new URLSearchParams({
+    page: String(page),
+    size: String(API_PAGE_SIZE),
+  });
+  const response = await fetch(apiUrl(`stock/books?${query.toString()}`), {
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("No se pudieron cargar los libros");
+  }
+
+  const result: ListResponse<BookRecord> = await response.json();
+  const hasNextPage =
+    result.pagination?.totalPages != null
+      ? page + 1 < result.pagination.totalPages
+      : result.data.length === API_PAGE_SIZE;
+
+  return {
+    books: result.data,
+    nextPage: hasNextPage ? page + 1 : undefined,
+  };
+}
+
 export async function getBookByIdRequest(
   id: string
 ): Promise<BookRecord | null> {
-  const response = await fetch(`${STOCK_API_URL}/books/${id}`, {
+  const response = await fetch(apiUrl(`stock/books/${id}`), {
     headers: getAuthHeaders(),
   });
 
@@ -85,44 +119,133 @@ export function getGenresRequest(): Promise<CatalogEntity[]> {
   return getAllPages<CatalogEntity>("genres");
 }
 
-export async function createBookRequest(
-  data: bookInputType
-): Promise<{ id: string }> {
-  const response = await fetch(`${API_URL}/books`, {
+export function searchCatalogRequest(
+  resource: CatalogResource,
+  name: string
+): Promise<CatalogEntity[]> {
+  return getAllPages<CatalogEntity>(resource, name.trim());
+}
+
+function normalizeName(name: string): string {
+  return name
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+async function findCatalogEntityByName(
+  resource: CatalogResource,
+  name: string
+): Promise<CatalogEntity | null> {
+  const matches = await getAllPages<CatalogEntity>(resource, name);
+  return (
+    matches.find(
+      (entity) =>
+        entity.id !== null &&
+        entity.name !== null &&
+        normalizeName(entity.name) === normalizeName(name)
+    ) ?? null
+  );
+}
+
+async function createCatalogEntityRequest(
+  resource: CatalogResource,
+  name: string
+): Promise<CatalogEntity> {
+  const response = await fetch(apiUrl(`stock/${resource}`), {
     method: "POST",
     headers: getAuthHeaders(),
-    body: JSON.stringify({
-      title: data.title,
-      description: data.description,
-      price: data.price ? Number(data.price) : null,
-      coverUrl: data.coverUrl || null,
-      authors: data.authors.map((name) => ({ name })),
-      genres: data.genres.map((name) => ({ name })),
-    }),
+    body: JSON.stringify({ name }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo crear ${resource === "authors" ? "el autor" : "el género"}: ${name}`);
+  }
+
+  const result: ItemResponse<CatalogEntity> = await response.json();
+  if (result.data?.id == null) {
+    throw new Error(`La API no devolvió el identificador de ${name}`);
+  }
+
+  return result.data;
+}
+
+async function resolveCatalogIds(
+  resource: CatalogResource,
+  names: string[]
+): Promise<number[]> {
+  const uniqueNames = [
+    ...new Map(
+      names
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .map((name) => [normalizeName(name), name] as const)
+    ).values(),
+  ];
+  if (uniqueNames.length === 0) return [];
+
+  return Promise.all(
+    uniqueNames.map(async (name) => {
+      const entity =
+        (await findCatalogEntityByName(resource, name)) ??
+        (await createCatalogEntityRequest(resource, name));
+      if (entity.id === null) {
+        throw new Error(`La API no devolvió el identificador de ${name}`);
+      }
+      return entity.id;
+    })
+  );
+}
+
+function toBookRequest(data: bookInputType, authorIds: number[], genreIds: number[]) {
+  return {
+    title: data.title,
+    description: data.description,
+    price: Number(data.price),
+    coverUrl: data.coverUrl || null,
+    authorIds,
+    genreIds,
+  };
+}
+
+export async function createBookRequest(
+  data: bookInputType
+): Promise<BookRecord> {
+  const [authorIds, genreIds] = await Promise.all([
+    resolveCatalogIds("authors", data.authors),
+    resolveCatalogIds("genres", data.genres),
+  ]);
+  const response = await fetch(apiUrl("stock/books"), {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(toBookRequest(data, authorIds, genreIds)),
   });
 
   if (!response.ok) {
     throw new Error("No se pudo crear el libro");
   }
 
-  return response.json();
+  const result: ItemResponse<BookRecord> = await response.json();
+  if (result.data?.id == null) {
+    throw new Error("La API no devolvió el identificador del libro creado");
+  }
+
+  return result.data;
 }
 
 export async function updateBookRequest(
   id: string,
   data: bookInputType
 ): Promise<void> {
-  const response = await fetch(`${API_URL}/books/${id}`, {
+  const [authorIds, genreIds] = await Promise.all([
+    resolveCatalogIds("authors", data.authors),
+    resolveCatalogIds("genres", data.genres),
+  ]);
+  const response = await fetch(apiUrl(`stock/books/${id}`), {
     method: "PUT",
     headers: getAuthHeaders(),
-    body: JSON.stringify({
-      title: data.title,
-      description: data.description,
-      price: data.price ? Number(data.price) : null,
-      coverUrl: data.coverUrl || null,
-      authors: data.authors.map((name) => ({ name })),
-      genres: data.genres.map((name) => ({ name })),
-    }),
+    body: JSON.stringify(toBookRequest(data, authorIds, genreIds)),
   });
 
   if (!response.ok) {

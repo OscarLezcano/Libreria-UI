@@ -1,14 +1,32 @@
 import type { loginInputType } from "@/common/schemas/auth/LoginInputSchema";
 import type { registerInputType } from "@/common/schemas/auth/RegisterInputSchema";
+import { apiUrl } from "@/common/services/http";
 
-const AUTH_API_URL =
-  process.env.NEXT_PUBLIC_AUTH_API_URL ?? "http://localhost:8080";
 const HEADER = { "Content-Type": "application/json" };
 
 export interface AuthenticatedUser {
+  warehouseId?: number | null;
   name?: string | null;
   lastName?: string | null;
   email?: string | null;
+}
+
+export function getAuthenticatedWarehouseId(): number | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const storedUser = window.localStorage.getItem("bigbooks.user");
+    if (!storedUser) return null;
+
+    const user = JSON.parse(storedUser) as AuthenticatedUser;
+    return typeof user.warehouseId === "number" &&
+      Number.isSafeInteger(user.warehouseId) &&
+      user.warehouseId > 0
+      ? user.warehouseId
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 interface LoginResponseData {
@@ -19,7 +37,7 @@ interface LoginResponseData {
 export async function loginRequest(
   data: loginInputType
 ): Promise<{ token: string; user: AuthenticatedUser | null }> {
-  const response = await fetch(`${AUTH_API_URL}/auth/login`, {
+  const response = await fetch(apiUrl("auth/login"), {
     method: "POST",
     credentials: "include",
     headers: HEADER,
@@ -41,7 +59,7 @@ export async function loginRequest(
 export async function registerRequest(
   data: registerInputType
 ): Promise<void> {
-  const response = await fetch(`${AUTH_API_URL}/auth/register`, {
+  const response = await fetch(apiUrl("auth/register"), {
     method: "POST",
     headers: HEADER,
     body: JSON.stringify(data),

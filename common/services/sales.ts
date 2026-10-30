@@ -1,7 +1,4 @@
-import { getAuthHeaders } from "@/common/services/http";
-
-const SALES_API_URL =
-  process.env.NEXT_PUBLIC_SALES_API_URL ?? "http://localhost:8080/sales";
+import { apiUrl, getAuthHeaders } from "@/common/services/http";
 
 export interface CreateOrderInput {
   items: { bookId: number; quantity: number }[];
@@ -11,7 +8,7 @@ export interface CreateOrderInput {
 export async function createOrderRequest(
   order: CreateOrderInput
 ): Promise<string> {
-  const response = await fetch(`${SALES_API_URL}/orders`, {
+  const response = await fetch(apiUrl("sales/orders"), {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(order),
@@ -60,7 +57,7 @@ export interface Order {
 }
 
 export async function getMyOrders(): Promise<Order[]> {
-  const response = await fetch(`${SALES_API_URL}/orders`, {
+  const response = await fetch(apiUrl("sales/orders"), {
     method: "GET",
     headers: getAuthHeaders(),
     credentials: "include",
@@ -85,7 +82,7 @@ export async function getMyOrders(): Promise<Order[]> {
 }
 
 // export async function markOrderAsPaidRequest(orderId: string): Promise<void> {
-//   const response = await fetch(`${SALES_API_URL}/orders/${orderId}/status`, {
+//   const response = await fetch(apiUrl(`sales/orders/${orderId}/status`), {
 //     method: "PUT",
 //     headers: getAuthHeaders(),
 //     body: JSON.stringify({ status: "PAID" }),

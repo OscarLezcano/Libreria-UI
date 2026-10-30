@@ -1,39 +1,35 @@
 "use client";
 
-import type { Supplier } from "@/common/data/suppliers";
+import type {
+  SupplierInput,
+  SupplierRecord,
+} from "@/common/services/suppliers";
 import { useState } from "react";
 
 interface SupplierFormProps {
-  initial?: Supplier | null;
-  onSubmit: (data: Omit<Supplier, "id">) => void;
+  initial?: SupplierRecord | null;
+  onSubmit: (data: SupplierInput) => void;
   onCancel: () => void;
+  isPending?: boolean;
 }
 
 const EMPTY = {
   name: "",
   ruc: "",
-  email: "",
-  phone: "",
-  address: "",
-  active: true,
 };
 
 export default function SupplierForm({
   initial,
   onSubmit,
   onCancel,
+  isPending = false,
 }: SupplierFormProps) {
   const [form, setForm] = useState({
     name: initial?.name ?? EMPTY.name,
     ruc: initial?.ruc ?? EMPTY.ruc,
-    contactName: initial?.contactName ?? "",
-    email: initial?.email ?? EMPTY.email,
-    phone: initial?.phone ?? EMPTY.phone,
-    address: initial?.address ?? EMPTY.address,
-    active: initial?.active ?? EMPTY.active,
   });
 
-  const update = (field: keyof typeof form, value: string | boolean) =>
+  const update = (field: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [field]: value }));
 
   return (
@@ -71,44 +67,19 @@ export default function SupplierForm({
           />
         </fieldset>
 
-        <fieldset className="fieldset sm:col-span-2">
-          <legend className="fieldset-legend">Teléfono</legend>
-          <input
-            type="tel"
-            className="input w-full"
-            placeholder="+595 ..."
-            value={form.phone}
-            onChange={(e) => update("phone", e.target.value)}
-          />
-        </fieldset>
-
-        <fieldset className="fieldset sm:col-span-2">
-          <legend className="fieldset-legend">Correo electrónico</legend>
-          <input
-            type="email"
-            className="input w-full"
-            placeholder="ventas@proveedor.com.py"
-            value={form.email}
-            onChange={(e) => update("email", e.target.value)}
-          />
-        </fieldset>
-
-        <fieldset className="fieldset sm:col-span-2">
-          <legend className="fieldset-legend">Dirección</legend>
-          <input
-            className="input w-full"
-            placeholder="Calle, número, ciudad"
-            value={form.address}
-            onChange={(e) => update("address", e.target.value)}
-          />
-        </fieldset>
       </div>
 
       <div className="modal-action">
-        <button type="button" className="btn btn-ghost" onClick={onCancel}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={onCancel}
+          disabled={isPending}
+        >
           Cancelar
         </button>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary" disabled={isPending}>
+          {isPending && <span className="loading loading-spinner loading-xs" />}
           Guardar Proveedor
         </button>
       </div>
