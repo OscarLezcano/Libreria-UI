@@ -157,17 +157,17 @@ export default function NuevaCompraPage() {
         <NotificationToast
           type="error"
           message={formError}
-          className="mb-6"
+          placement="toast"
+          onClose={() => setFormError(null)}
         />
       )}
-
       {isLoading ? (
         <LoadingSpinner label="Cargando proveedores y libros" />
       ) : hasError ? (
         <NotificationToast
           type="error"
           message="No se pudieron cargar los proveedores. Intentá nuevamente más tarde."
-          className="my-6"
+          placement="toast"
         />
       ) : (
         <div className="flex flex-col gap-6">

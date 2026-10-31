@@ -154,6 +154,7 @@ export default function AdminProveedoresPage() {
               <NotificationToast
                 type="error"
                 message={actionError}
+                placement="toast"
                 onClose={() => setActionError(null)}
               />
             )}
@@ -182,6 +183,7 @@ export default function AdminProveedoresPage() {
               <NotificationToast
                 type="error"
                 message="No se pudieron cargar los proveedores de la base de datos."
+                placement="toast"
               />
             ) : (
               <>
@@ -259,7 +261,8 @@ export default function AdminProveedoresPage() {
             <NotificationToast
               type="error"
               message={formError}
-              className="mb-4"
+              placement="toast"
+              onClose={() => setFormError(null)}
             />
           )}
           <SupplierForm

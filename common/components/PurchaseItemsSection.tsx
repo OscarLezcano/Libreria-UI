@@ -2,6 +2,7 @@
 
 import { formatGs } from "@/common/utils/format";
 import EditableNumberInput from "@/common/components/EditableNumberInput";
+import NotificationToast from "@/common/components/NotificationToast";
 import QuantitySelector from "@/common/components/QuantitySelector";
 import { BookOpen, Plus, Search, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -117,6 +118,17 @@ export default function PurchaseItemsSection({
           }}
           aria-labelledby="book-picker-title"
         >
+          {booksError && isBookPickerOpen && (
+            <NotificationToast
+              type="error"
+              message={
+                books.length > 0
+                  ? "No se pudieron cargar más libros."
+                  : "No se pudieron cargar los libros."
+              }
+              placement="toast"
+            />
+          )}
           <div className="modal-box flex max-h-[85vh] w-11/12 max-w-2xl flex-col gap-4 p-4 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -162,15 +174,12 @@ export default function PurchaseItemsSection({
               )}
               {booksError && books.length === 0 && (
                 <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center">
-                  <p className="text-sm text-error">
-                    No se pudieron cargar los libros.
-                  </p>
                   <button
                     type="button"
                     className="btn btn-sm"
                     onClick={onRetryBooks}
                   >
-                    Reintentar
+                    Reintentar carga de libros
                   </button>
                 </div>
               )}
@@ -254,13 +263,12 @@ export default function PurchaseItemsSection({
               })}
               {booksError && books.length > 0 && (
                 <div className="flex items-center justify-center gap-3 p-3 text-sm">
-                  <span className="text-error">No se pudieron cargar más libros.</span>
                   <button
                     type="button"
                     className="btn btn-ghost btn-xs"
                     onClick={onRetryBooks}
                   >
-                    Reintentar
+                    Reintentar carga de libros
                   </button>
                 </div>
               )}

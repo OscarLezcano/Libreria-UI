@@ -214,6 +214,7 @@ export default function AdminLibrosPage() {
               <NotificationToast
                 type="error"
                 message="No se pudieron cargar los libros del catálogo."
+                placement="toast"
               />
             ) : (
               <div className="overflow-x-auto">
@@ -302,7 +303,8 @@ export default function AdminLibrosPage() {
             <NotificationToast
               type="error"
               message={submissionError}
-              className="mb-4"
+              placement="toast"
+              onClose={() => setSubmissionError(null)}
             />
           )}
           <BookForm

@@ -127,6 +127,7 @@ export default function AdminComprasPage() {
               <NotificationToast
                 type="error"
                 message={actionError}
+                placement="toast"
                 onClose={() => setActionError(null)}
               />
             )}
@@ -173,6 +174,7 @@ export default function AdminComprasPage() {
               <NotificationToast
                 type="error"
                 message="No se pudieron cargar las compras. Intentá nuevamente más tarde."
+                placement="toast"
               />
             ) : (
               <>
