@@ -17,7 +17,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 4;
 
 export default function AdminProveedoresPage() {
   const queryClient = useQueryClient();
@@ -26,7 +26,7 @@ export default function AdminProveedoresPage() {
   const search = query.trim();
   const suppliersQuery = useQuery({
     queryKey: ["suppliers", page, search],
-    queryFn: () => getSuppliersRequest(page, search),
+    queryFn: () => getSuppliersRequest(page, PAGE_SIZE, search),
   });
   const suppliers = suppliersQuery.data?.suppliers ?? [];
   const totalPages = suppliersQuery.data?.totalPages ?? 1;

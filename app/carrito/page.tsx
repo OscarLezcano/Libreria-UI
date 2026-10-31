@@ -7,12 +7,14 @@ import NotificationToast from "@/common/components/NotificationToast";
 import OrderSummary from "@/common/components/OrderSummary";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { useCart } from "@/common/context/CartContext";
-import { useBookCatalog } from "@/common/hooks/useBookCatalog";
+import { useCartBooks } from "@/common/hooks/useBookCatalog";
 import Link from "next/link";
 
 export default function CarritoPage() {
   const { items, remove, setQuantity } = useCart();
-  const { catalog, isLoading, isError } = useBookCatalog();
+  const { catalog, isLoading, isError } = useCartBooks(
+    items.map((item) => item.bookId)
+  );
 
   const lines = items.flatMap((item) => {
     const book = catalog.find((candidate) => candidate.id === item.bookId);

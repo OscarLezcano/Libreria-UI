@@ -23,10 +23,11 @@ const PROMO_COVERS = [
 const PAGE_SIZE = 4;
 
 export default function Home() {
-  const { catalog, isLoading, isError } = useBookCatalog();
   const [page, setPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(catalog.length / PAGE_SIZE));
-  const visibleBooks = catalog.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const { catalog, totalPages, isLoading, isError } = useBookCatalog(
+    page,
+    PAGE_SIZE
+  );
 
   return (
     <main className="bg-base-100 flex min-h-dvh flex-col">
@@ -53,7 +54,7 @@ export default function Home() {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {visibleBooks.map((book) => (
+              {catalog.map((book) => (
                 <BookCard
                   key={book.id}
                   bookId={book.id}

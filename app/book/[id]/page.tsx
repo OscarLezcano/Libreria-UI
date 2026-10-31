@@ -6,11 +6,9 @@ import LoadingSpinner from "@/common/components/LoadingSpinner";
 import NotificationToast from "@/common/components/NotificationToast";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { getBook } from "@/common/data/books";
-import {
-  getAuthorsRequest,
-  getBookByIdRequest,
-  getGenresRequest,
-} from "@/common/services/books";
+import { useAuthorsByIds } from "@/common/hooks/useAuthorsByIds";
+import { useGenresByIds } from "@/common/hooks/useGenresByIds";
+import { getBookByIdRequest } from "@/common/services/books";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -26,20 +24,8 @@ export default function BookDetailPage() {
     staleTime: 60_000,
   });
   const apiBook = bookQuery.data;
-  const needsAuthors = apiBook?.authorIds?.some((authorId) => authorId !== null);
-  const needsGenres = apiBook?.genreIds?.some((genreId) => genreId !== null);
-  const authorsQuery = useQuery({
-    queryKey: ["authors", "catalog"],
-    queryFn: getAuthorsRequest,
-    enabled: Boolean(needsAuthors),
-    staleTime: Infinity,
-  });
-  const genresQuery = useQuery({
-    queryKey: ["genres", "catalog"],
-    queryFn: getGenresRequest,
-    enabled: Boolean(needsGenres),
-    staleTime: Infinity,
-  });
+  const authorsQuery = useAuthorsByIds(apiBook?.authorIds ?? []);
+  const genresQuery = useGenresByIds(apiBook?.genreIds ?? []);
 
   const staticBook = isApiBook ? undefined : getBook(id);
   const book = !isApiBook
@@ -63,15 +49,15 @@ export default function BookDetailPage() {
             `https://picsum.photos/seed/book-${apiBook.id}/300/400`,
           description: apiBook.description ?? "",
           authors: (apiBook.authorIds ?? []).flatMap((authorId) => {
-            const author = authorsQuery.data?.find(
-              (item) => item.id === authorId
-            );
+            const author =
+              authorId === null
+                ? undefined
+                : authorsQuery.authorsById.get(authorId);
             return author?.name ? [author.name] : [];
           }),
           categories: (apiBook.genreIds ?? []).flatMap((genreId) => {
-            const genre = genresQuery.data?.find(
-              (item) => item.id === genreId
-            );
+            const genre =
+              genreId === null ? undefined : genresQuery.genresById.get(genreId);
             return genre?.name ? [genre.name] : [];
           }),
           price: apiBook.price,
@@ -80,12 +66,12 @@ export default function BookDetailPage() {
 
   const isLoading =
     (isApiBook && bookQuery.isPending) ||
-    (Boolean(needsAuthors) && authorsQuery.isPending) ||
-    (Boolean(needsGenres) && genresQuery.isPending);
+    authorsQuery.isLoading ||
+    genresQuery.isLoading;
   const hasError =
     (isApiBook && bookQuery.isError) ||
-    (Boolean(needsAuthors) && authorsQuery.isError) ||
-    (Boolean(needsGenres) && genresQuery.isError);
+    authorsQuery.isError ||
+    genresQuery.isError;
 
   return (
     <main className="bg-base-100 flex min-h-dvh flex-col">

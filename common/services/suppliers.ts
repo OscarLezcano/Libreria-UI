@@ -62,11 +62,12 @@ function getSupplierError(response: Response, action: string): Error {
 
 export async function getSuppliersRequest(
   page: number,
-  search: string
+  size = PAGE_SIZE,
+  search = ""
 ): Promise<SupplierPage> {
   const query = new URLSearchParams({
     page: String(Math.max(0, page - 1)),
-    size: String(PAGE_SIZE),
+    size: String(size),
   });
   if (search.trim()) query.set("search", search.trim());
 
@@ -87,12 +88,12 @@ export async function getSuppliersRequest(
 }
 
 export async function getAllSuppliersRequest(): Promise<SupplierRecord[]> {
-  const firstPage = await getSuppliersRequest(1, "");
+  const firstPage = await getSuppliersRequest(1);
   if (firstPage.totalPages === 1) return firstPage.suppliers;
 
   const remainingPages = await Promise.all(
     Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-      getSuppliersRequest(index + 2, "")
+      getSuppliersRequest(index + 2)
     )
   );
 

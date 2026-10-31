@@ -3,12 +3,15 @@
 import BookForm from "@/common/components/BookForm";
 import LoadingSpinner from "@/common/components/LoadingSpinner";
 import NotificationToast from "@/common/components/NotificationToast";
+import Pagination from "@/common/components/Pagination";
 import type { bookInputType } from "@/common/schemas/book/BookInputSchema";
+import { useAuthorsByIds } from "@/common/hooks/useAuthorsByIds";
+import { useGenresByIds } from "@/common/hooks/useGenresByIds";
 import {
+  BOOKS_PAGE_SIZE,
   createBookRequest,
-  getAuthorsRequest,
-  getBooksRequest,
-  getGenresRequest,
+  getBooksPageRequest,
+  type CatalogEntity,
   updateBookRequest,
   type BookRecord,
 } from "@/common/services/books";
@@ -22,8 +25,8 @@ const EMPTY_BOOKS: BookRecord[] = [];
 
 function toAdminBook(
   book: BookRecord,
-  authorsById: Map<number, string>,
-  genresById: Map<number, string>
+  authorsById: Map<number, CatalogEntity>,
+  genresById: Map<number, CatalogEntity>
 ): AdminBook | null {
   if (book.id === null) return null;
 
@@ -34,11 +37,11 @@ function toAdminBook(
     price: book.price === null ? "" : String(book.price),
     coverUrl: book.coverUrl ?? "",
     authors: (book.authorIds ?? []).flatMap((id) => {
-      const name = id === null ? undefined : authorsById.get(id);
+      const name = id === null ? undefined : authorsById.get(id)?.name;
       return name ? [name] : [];
     }),
     genres: (book.genreIds ?? []).flatMap((id) => {
-      const name = id === null ? undefined : genresById.get(id);
+      const name = id === null ? undefined : genresById.get(id)?.name;
       return name ? [name] : [];
     }),
   };
@@ -46,49 +49,35 @@ function toAdminBook(
 
 export default function AdminLibrosPage() {
   const queryClient = useQueryClient();
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const booksQuery = useQuery({
-    queryKey: ["books", "catalog"],
-    queryFn: getBooksRequest,
+    queryKey: ["books", "catalog", page, BOOKS_PAGE_SIZE, query.trim()],
+    queryFn: () =>
+      getBooksPageRequest(page - 1, {
+        size: BOOKS_PAGE_SIZE,
+        title: query,
+      }),
     staleTime: 60_000,
   });
-  const bookRecords = booksQuery.data ?? EMPTY_BOOKS;
-  const needsAuthors = bookRecords.some((book) =>
-    book.authorIds?.some((id) => id !== null)
+  const bookRecords = booksQuery.data?.books ?? EMPTY_BOOKS;
+  const authorsQuery = useAuthorsByIds(
+    bookRecords.flatMap((book) => book.authorIds ?? [])
   );
-  const needsGenres = bookRecords.some((book) =>
-    book.genreIds?.some((id) => id !== null)
+  const genresQuery = useGenresByIds(
+    bookRecords.flatMap((book) => book.genreIds ?? [])
   );
-  const authorsQuery = useQuery({
-    queryKey: ["authors", "catalog"],
-    queryFn: getAuthorsRequest,
-    enabled: needsAuthors,
-    staleTime: Infinity,
-  });
-  const genresQuery = useQuery({
-    queryKey: ["genres", "catalog"],
-    queryFn: getGenresRequest,
-    enabled: needsGenres,
-    staleTime: Infinity,
-  });
   const apiBooks = useMemo(() => {
-    const authorsById = new Map(
-      (authorsQuery.data ?? []).flatMap((author) =>
-        author.id !== null && author.name ? [[author.id, author.name] as const] : []
-      )
-    );
-    const genresById = new Map(
-      (genresQuery.data ?? []).flatMap((genre) =>
-        genre.id !== null && genre.name ? [[genre.id, genre.name] as const] : []
-      )
-    );
-
     return bookRecords.flatMap((book) => {
-      const adminBook = toAdminBook(book, authorsById, genresById);
+      const adminBook = toAdminBook(
+        book,
+        authorsQuery.authorsById,
+        genresQuery.genresById
+      );
       return adminBook ? [adminBook] : [];
     });
-  }, [authorsQuery.data, bookRecords, genresQuery.data]);
+  }, [authorsQuery.authorsById, bookRecords, genresQuery.genresById]);
   const books = apiBooks;
-  const [query, setQuery] = useState("");
   const modalRef = useRef<HTMLDialogElement>(null);
   const [editing, setEditing] = useState<AdminBook | null>(null);
   const [formSession, setFormSession] = useState(0);
@@ -111,8 +100,7 @@ export default function AdminLibrosPage() {
     onSuccess: async (_result, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["books", "catalog"] }),
-        queryClient.invalidateQueries({ queryKey: ["authors", "catalog"] }),
-        queryClient.invalidateQueries({ queryKey: ["genres", "catalog"] }),
+        queryClient.invalidateQueries({ queryKey: ["books", "detail"] }),
       ]);
       modalRef.current?.close();
       setSubmissionError(null);
@@ -128,23 +116,12 @@ export default function AdminLibrosPage() {
   });
   const isLoading =
     booksQuery.isPending ||
-    (needsAuthors && authorsQuery.isPending) ||
-    (needsGenres && genresQuery.isPending);
+    authorsQuery.isLoading ||
+    genresQuery.isLoading;
   const hasError =
     booksQuery.isError ||
-    (needsAuthors && authorsQuery.isError) ||
-    (needsGenres && genresQuery.isError);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return books;
-    return books.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        b.authors.some((a) => a.toLowerCase().includes(q)) ||
-        b.genres.some((g) => g.toLowerCase().includes(q))
-    );
-  }, [books, query]);
+    authorsQuery.isError ||
+    genresQuery.isError;
 
   const openNew = () => {
     setEditing(null);
@@ -200,9 +177,12 @@ export default function AdminLibrosPage() {
                 <Search className="size-4 opacity-50" strokeWidth={2} />
                 <input
                   type="search"
-                  placeholder="Buscar por título, autor o género..."
+                  placeholder="Buscar por título..."
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setPage(1);
+                  }}
                   aria-label="Buscar libros"
                 />
               </label>
@@ -217,78 +197,85 @@ export default function AdminLibrosPage() {
                 placement="toast"
               />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>Portada</th>
-                      <th>Título</th>
-                      <th>Autores</th>
-                      <th>Géneros</th>
-                      <th className="text-right">Precio</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.length === 0 && (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="table table-sm">
+                    <thead>
                       <tr>
-                        <td
-                          colSpan={5}
-                          className="text-base-content/60 py-8 text-center text-sm"
+                        <th>Portada</th>
+                        <th>Título</th>
+                        <th>Autores</th>
+                        <th>Géneros</th>
+                        <th className="text-right">Precio</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {books.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="text-base-content/60 py-8 text-center text-sm"
+                          >
+                            No se encontraron libros.
+                          </td>
+                        </tr>
+                      )}
+                      {books.map((book) => (
+                        <tr
+                          key={book.id}
+                          className="cursor-pointer hover:bg-base-200"
+                          onClick={() => openEdit(book)}
                         >
-                          No se encontraron libros.
-                        </td>
-                      </tr>
-                    )}
-                    {filtered.map((book) => (
-                      <tr
-                        key={book.id}
-                        className="cursor-pointer hover:bg-base-200"
-                        onClick={() => openEdit(book)}
-                      >
-                        <td>
-                          {book.coverUrl ? (
-                            <img
-                              src={book.coverUrl}
-                              alt={book.title}
-                              className="aspect-[3/4] w-10 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="bg-base-200 text-base-content/40 flex aspect-[3/4] w-10 items-center justify-center rounded text-[10px]">
-                              S/F
-                            </div>
-                          )}
-                        </td>
-                        <td className="font-semibold">{book.title}</td>
-                        <td className="text-sm">
-                          {book.authors.length > 0
-                            ? book.authors.join(", ")
-                            : "—"}
-                        </td>
-                        <td>
-                          <div className="flex flex-wrap gap-1">
-                            {book.genres.length > 0 ? (
-                              book.genres.map((g) => (
-                                <span key={g} className="badge badge-sm">
-                                  {g}
-                                </span>
-                              ))
+                          <td>
+                            {book.coverUrl ? (
+                              <img
+                                src={book.coverUrl}
+                                alt={book.title}
+                                className="aspect-[3/4] w-10 rounded object-cover"
+                              />
                             ) : (
-                              <span className="text-base-content/60 text-sm">
-                                —
-                              </span>
+                              <div className="bg-base-200 text-base-content/40 flex aspect-[3/4] w-10 items-center justify-center rounded text-[10px]">
+                                S/F
+                              </div>
                             )}
-                          </div>
-                        </td>
-                        <td className="text-right text-sm font-semibold">
-                          {book.price
-                            ? `${formatGs(Number(book.price))} Gs`
-                            : "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          </td>
+                          <td className="font-semibold">{book.title}</td>
+                          <td className="text-sm">
+                            {book.authors.length > 0
+                              ? book.authors.join(", ")
+                              : "—"}
+                          </td>
+                          <td>
+                            <div className="flex flex-wrap gap-1">
+                              {book.genres.length > 0 ? (
+                                book.genres.map((g) => (
+                                  <span key={g} className="badge badge-sm">
+                                    {g}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-base-content/60 text-sm">
+                                  —
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="text-right text-sm font-semibold">
+                            {book.price
+                              ? `${formatGs(Number(book.price))} Gs`
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  page={page}
+                  totalPages={booksQuery.data?.totalPages ?? 1}
+                  onChange={setPage}
+                />
+              </>
             )}
           </div>
         </section>

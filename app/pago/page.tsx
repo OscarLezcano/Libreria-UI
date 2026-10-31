@@ -7,7 +7,7 @@ import PaymentForm from "@/common/components/PaymentForm";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { useCart } from "@/common/context/CartContext";
 import { couponDiscount, findCoupon } from "@/common/data/coupons";
-import { useBookCatalog } from "@/common/hooks/useBookCatalog";
+import { useCartBooks } from "@/common/hooks/useBookCatalog";
 import {
   createOrderRequest,
   // markOrderAsPaidRequest,
@@ -25,7 +25,9 @@ interface PaidData {
 
 export default function PagoPage() {
   const { items, coupon, shipping, clear } = useCart();
-  const { catalog, isLoading, isError } = useBookCatalog();
+  const { catalog, isLoading, isError } = useCartBooks(
+    items.map((item) => item.bookId)
+  );
   const [paid, setPaid] = useState<PaidData | null>(null);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);

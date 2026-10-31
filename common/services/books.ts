@@ -1,7 +1,7 @@
 import type { bookInputType } from "@/common/schemas/book/BookInputSchema";
 import { apiUrl, getAuthHeaders } from "@/common/services/http";
 
-const API_PAGE_SIZE = 25;
+export const BOOKS_PAGE_SIZE = 4;
 type CatalogResource = "authors" | "genres";
 
 export interface BookRecord {
@@ -23,11 +23,14 @@ interface ListResponse<T> {
   data: T[];
   pagination?: {
     totalPages?: number | null;
+    totalElements?: number | null;
   };
 }
 
 export interface BooksPage {
   books: BookRecord[];
+  totalPages: number;
+  totalElements: number;
   nextPage: number | undefined;
 }
 
@@ -43,7 +46,7 @@ async function getAllPages<T>(resource: string, name?: string): Promise<T[]> {
   while (hasNextPage) {
     const query = new URLSearchParams({
       page: String(page),
-      size: String(API_PAGE_SIZE),
+      size: String(BOOKS_PAGE_SIZE),
     });
     if (name) query.set("name", name);
 
@@ -61,22 +64,24 @@ async function getAllPages<T>(resource: string, name?: string): Promise<T[]> {
     hasNextPage =
       result.pagination?.totalPages != null
         ? page + 1 < result.pagination.totalPages
-        : result.data.length === API_PAGE_SIZE;
+        : result.data.length === BOOKS_PAGE_SIZE;
     page += 1;
   }
 
   return items;
 }
 
-export function getBooksRequest(): Promise<BookRecord[]> {
-  return getAllPages<BookRecord>("books");
-}
-
-export async function getBooksPageRequest(page: number): Promise<BooksPage> {
+export async function getBooksPageRequest(
+  pageIndex: number,
+  options: { size?: number; title?: string } = {}
+): Promise<BooksPage> {
+  const page = Math.max(0, pageIndex);
+  const size = options.size ?? BOOKS_PAGE_SIZE;
   const query = new URLSearchParams({
     page: String(page),
-    size: String(API_PAGE_SIZE),
+    size: String(size),
   });
+  if (options.title?.trim()) query.set("title", options.title.trim());
   const response = await fetch(apiUrl(`stock/books?${query.toString()}`), {
     headers: getAuthHeaders(),
   });
@@ -86,14 +91,17 @@ export async function getBooksPageRequest(page: number): Promise<BooksPage> {
   }
 
   const result: ListResponse<BookRecord> = await response.json();
-  const hasNextPage =
-    result.pagination?.totalPages != null
-      ? page + 1 < result.pagination.totalPages
-      : result.data.length === API_PAGE_SIZE;
+  const totalPages = Math.max(
+    1,
+    result.pagination?.totalPages ??
+    (result.data.length === size ? page + 2 : page + 1)
+  );
 
   return {
     books: result.data,
-    nextPage: hasNextPage ? page + 1 : undefined,
+    totalPages,
+    totalElements: result.pagination?.totalElements ?? result.data.length,
+    nextPage: page + 1 < totalPages ? page + 1 : undefined,
   };
 }
 
@@ -111,12 +119,32 @@ export async function getBookByIdRequest(
   return result.data;
 }
 
-export function getAuthorsRequest(): Promise<CatalogEntity[]> {
-  return getAllPages<CatalogEntity>("authors");
+export async function getAuthorByIdRequest(
+  id: number
+): Promise<CatalogEntity | null> {
+  const response = await fetch(apiUrl(`stock/authors/${id}`), {
+    headers: getAuthHeaders(),
+  });
+
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error("No se pudo cargar el autor");
+
+  const result: ItemResponse<CatalogEntity> = await response.json();
+  return result.data;
 }
 
-export function getGenresRequest(): Promise<CatalogEntity[]> {
-  return getAllPages<CatalogEntity>("genres");
+export async function getGenreByIdRequest(
+  id: number
+): Promise<CatalogEntity | null> {
+  const response = await fetch(apiUrl(`stock/genres/${id}`), {
+    headers: getAuthHeaders(),
+  });
+
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error("No se pudo cargar el género");
+
+  const result: ItemResponse<CatalogEntity> = await response.json();
+  return result.data;
 }
 
 export function searchCatalogRequest(

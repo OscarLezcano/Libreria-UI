@@ -8,26 +8,19 @@ import NotificationToast from "@/common/components/NotificationToast";
 import Pagination from "@/common/components/Pagination";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { useBookCatalog } from "@/common/hooks/useBookCatalog";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 8;
 
 export default function ExplorarPage() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const { catalog, isLoading, isError } = useBookCatalog();
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return catalog.filter((book) => book.title.toLowerCase().includes(q));
-  }, [catalog, query]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const visibleBooks = filtered.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+  const { catalog, totalPages, totalElements, isLoading, isError } =
+    useBookCatalog(
+      page,
+      PAGE_SIZE,
+      query
+    );
 
   const clearSearch = () => {
     setQuery("");
@@ -55,8 +48,8 @@ export default function ExplorarPage() {
         <div className="min-w-0 flex-1 p-6 lg:p-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <p className="text-base-content/60 text-sm">
-              Mostrando <b className="text-base-content">{filtered.length}</b>{" "}
-              de <b className="text-base-content">{catalog.length}</b> resultados
+              Mostrando <b className="text-base-content">{catalog.length}</b>{" "}
+              de <b className="text-base-content">{totalElements}</b> resultados
               {query.trim() && (
                 <>
                   {" "}
@@ -74,7 +67,7 @@ export default function ExplorarPage() {
               message="No se pudo cargar el catálogo. Intentá nuevamente más tarde."
               className="my-10 w-full"
             />
-          ) : filtered.length === 0 ? (
+          ) : catalog.length === 0 ? (
             <div className="text-center">
               <p className="text-lg font-bold">Sin resultados</p>
               <p className="text-base-content/60 mt-1 text-sm">
@@ -90,7 +83,7 @@ export default function ExplorarPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {visibleBooks.map((book) => (
+                {catalog.map((book) => (
                   <BookCard
                     key={book.id}
                     bookId={book.id}
@@ -104,7 +97,7 @@ export default function ExplorarPage() {
               </div>
 
               <Pagination
-                page={currentPage}
+                page={page}
                 totalPages={totalPages}
                 onChange={setPage}
               />
