@@ -1,6 +1,6 @@
 "use client";
 
-import BookForm from "@/common/components/BookForm";
+import BookModal from "@/common/components/BookModal";
 import LoadingSpinner from "@/common/components/LoadingSpinner";
 import NotificationToast from "@/common/components/NotificationToast";
 import Pagination from "@/common/components/Pagination";
@@ -18,7 +18,7 @@ import {
 import { formatGs } from "@/common/utils/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 type AdminBook = bookInputType & { id: string };
 const EMPTY_BOOKS: BookRecord[] = [];
@@ -78,7 +78,7 @@ export default function AdminLibrosPage() {
     });
   }, [authorsQuery.authorsById, bookRecords, genresQuery.genresById]);
   const books = apiBooks;
-  const modalRef = useRef<HTMLDialogElement>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminBook | null>(null);
   const [formSession, setFormSession] = useState(0);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export default function AdminLibrosPage() {
         queryClient.invalidateQueries({ queryKey: ["books", "catalog"] }),
         queryClient.invalidateQueries({ queryKey: ["books", "detail"] }),
       ]);
-      modalRef.current?.close();
+      setIsModalOpen(false);
       setSubmissionError(null);
       setSubmissionSuccess(
         variables.id ? "Libro actualizado correctamente." : "Libro creado correctamente."
@@ -127,14 +127,14 @@ export default function AdminLibrosPage() {
     setEditing(null);
     setFormSession((session) => session + 1);
     setSubmissionError(null);
-    modalRef.current?.showModal();
+    setIsModalOpen(true);
   };
 
   const openEdit = (book: AdminBook) => {
     setEditing(book);
     setFormSession((session) => session + 1);
     setSubmissionError(null);
-    modalRef.current?.showModal();
+    setIsModalOpen(true);
   };
 
   const handleSubmit = (data: bookInputType) => {
@@ -281,31 +281,16 @@ export default function AdminLibrosPage() {
         </section>
       </main>
 
-      <dialog ref={modalRef} className="modal">
-        <div className="modal-box max-w-2xl">
-          <h3 className="mb-4 text-lg font-bold">
-            {editing ? "Editar Libro" : "Nuevo Libro"}
-          </h3>
-          {submissionError && (
-            <NotificationToast
-              type="error"
-              message={submissionError}
-              placement="toast"
-              onClose={() => setSubmissionError(null)}
-            />
-          )}
-          <BookForm
-            key={formSession}
-            initial={editing}
-            onSubmit={handleSubmit}
-            onCancel={() => modalRef.current?.close()}
-            isPending={saveBookMutation.isPending}
-          />
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+      <BookModal
+        isOpen={isModalOpen}
+        initial={editing}
+        formSession={formSession}
+        error={submissionError}
+        onErrorClose={() => setSubmissionError(null)}
+        onSubmit={handleSubmit}
+        onClose={() => setIsModalOpen(false)}
+        isPending={saveBookMutation.isPending}
+      />
     </>
   );
 }

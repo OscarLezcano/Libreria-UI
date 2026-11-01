@@ -8,18 +8,38 @@ import {
   PURCHASE_STATUS_OPTIONS,
   type PurchaseStatus,
 } from "@/common/data/suppliers";
+import { useSuppliersByIds } from "@/common/hooks/useSuppliersByIds";
+import { getAuthenticatedWarehouseId } from "@/common/services/auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getPurchasesRequest,
   updatePurchaseStatusRequest,
 } from "@/common/services/purchases";
-import { getAllSuppliersRequest } from "@/common/services/suppliers";
 import { formatGs } from "@/common/utils/format";
 import { Ban, Check, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  type FormEvent,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 const PAGE_SIZE = 5;
+
+function subscribeToUserStorage(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
+
+function getWarehouseSnapshot() {
+  return getAuthenticatedWarehouseId() ?? 0;
+}
+
+function getServerWarehouseSnapshot() {
+  return -1;
+}
 
 function formatPurchaseDate(value: string | null): string {
   if (!value) return "—";
@@ -31,6 +51,14 @@ function formatPurchaseDate(value: string | null): string {
 
 export default function AdminComprasPage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const warehouseSnapshot = useSyncExternalStore(
+    subscribeToUserStorage,
+    getWarehouseSnapshot,
+    getServerWarehouseSnapshot
+  );
+  const warehouseLoaded = warehouseSnapshot !== -1;
+  const warehouseId = warehouseSnapshot > 0 ? warehouseSnapshot : null;
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | PurchaseStatus>(
     "ALL"
@@ -38,55 +66,91 @@ export default function AdminComprasPage() {
   const [page, setPage] = useState(1);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [acceptingPurchaseId, setAcceptingPurchaseId] = useState<string | null>(null);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [acceptError, setAcceptError] = useState<string | null>(null);
+  const invoiceDialogRef = useRef<HTMLDialogElement>(null);
   const search = query.trim();
   const purchasesQuery = useQuery({
-    queryKey: ["purchases", page, statusFilter, search],
-    queryFn: () =>
-      getPurchasesRequest(page, PAGE_SIZE, statusFilter, search),
-  });
-  const suppliersQuery = useQuery({
-    queryKey: ["suppliers", "catalog"],
-    queryFn: getAllSuppliersRequest,
-    staleTime: 60_000,
+    queryKey: ["purchases", warehouseId, page, statusFilter, search],
+    queryFn: () => {
+      if (warehouseId === null) {
+        throw new Error("No se encontró un almacén asignado al usuario.");
+      }
+      return getPurchasesRequest(
+        page,
+        PAGE_SIZE,
+        statusFilter,
+        search,
+        warehouseId
+      );
+    },
+    enabled: warehouseId !== null,
   });
   const purchases = purchasesQuery.data?.purchases ?? [];
+  const suppliersQuery = useSuppliersByIds(
+    purchases.map((purchase) => purchase.supplierId)
+  );
   const totalPages = purchasesQuery.data?.totalPages ?? 1;
   const currentPage = Math.min(page, totalPages);
-  const supplierNames = new Map(
-    (suppliersQuery.data ?? []).map((supplier) => [supplier.id, supplier.name])
-  );
+  const supplierNames = suppliersQuery.suppliersById;
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: PurchaseStatus }) =>
-      updatePurchaseStatusRequest(id, status),
+    mutationFn: ({
+      id,
+      status,
+      invoiceNumber,
+    }: {
+      id: string;
+      status: "RECEIVED" | "CANCELLED";
+      invoiceNumber?: string;
+    }) => updatePurchaseStatusRequest(id, status, invoiceNumber),
     onSuccess: async (_result, variables) => {
       await queryClient.invalidateQueries({ queryKey: ["purchases"] });
+      if (variables.status === "RECEIVED") {
+        invoiceDialogRef.current?.close();
+      }
       setActionSuccess(
         variables.status === "RECEIVED"
           ? "Compra aceptada y registrada en inventario."
           : "Compra anulada correctamente."
       );
       setActionError(null);
+      setAcceptError(null);
     },
-    onError: (error) => {
-      setActionError(
+    onError: (error, variables) => {
+      const message =
         error instanceof Error
           ? error.message
-          : "No se pudo actualizar el estado de la compra."
-      );
+          : "No se pudo actualizar el estado de la compra.";
+      if (variables.status === "RECEIVED") {
+        setAcceptError(message);
+      } else {
+        setActionError(message);
+      }
     },
   });
 
-  const acceptPurchase = (id: string) => {
-    if (
-      !window.confirm(
-        "¿Aceptar esta compra y registrar sus ítems en el inventario?"
-      )
-    ) {
-      return;
-    }
+  const openAcceptDialog = (id: string) => {
+    setAcceptingPurchaseId(id);
+    setInvoiceNumber("");
+    setAcceptError(null);
     setActionError(null);
     setActionSuccess(null);
-    updateStatusMutation.mutate({ id, status: "RECEIVED" });
+    invoiceDialogRef.current?.showModal();
+  };
+
+  const handleAcceptPurchase = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const invoice = invoiceNumber.trim();
+    if (!acceptingPurchaseId || !invoice) {
+      setAcceptError("Ingresá el número de factura para aceptar la compra.");
+      return;
+    }
+    updateStatusMutation.mutate({
+      id: acceptingPurchaseId,
+      status: "RECEIVED",
+      invoiceNumber: invoice,
+    });
   };
 
   const cancelPurchase = (id: string) => {
@@ -168,8 +232,16 @@ export default function AdminComprasPage() {
               </div>
             </div>
 
-            {purchasesQuery.isPending ? (
+            {!warehouseLoaded ||
+            (warehouseId !== null &&
+              (purchasesQuery.isPending || suppliersQuery.isLoading)) ? (
               <LoadingSpinner label="Cargando compras" />
+            ) : warehouseId === null ? (
+              <NotificationToast
+                type="error"
+                message="Tu usuario no tiene un almacén asignado."
+                placement="toast"
+              />
             ) : purchasesQuery.isError ? (
               <NotificationToast
                 type="error"
@@ -205,12 +277,26 @@ export default function AdminComprasPage() {
                       {purchases.map((purchase) => {
                         const meta = PURCHASE_STATUS_META[purchase.status];
                         return (
-                          <tr key={purchase.id} className="hover:bg-base-200">
+                          <tr
+                            key={purchase.id}
+                            className="cursor-pointer hover:bg-base-200"
+                            onClick={() =>
+                              router.push(
+                                `/admin/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`
+                              )
+                            }
+                          >
                             <td className="font-semibold">
-                              {purchase.invoiceNumber || `Compra #${purchase.id}`}
+                              <Link
+                                href={`/admin/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`}
+                                className="link link-hover"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {purchase.invoiceNumber || `Compra #${purchase.id}`}
+                              </Link>
                             </td>
                             <td>
-                              {supplierNames.get(purchase.supplierId) ??
+                              {supplierNames.get(purchase.supplierId)?.name ??
                                 `Proveedor #${purchase.supplierId}`}
                             </td>
                             <td>{formatPurchaseDate(purchase.createdAt)}</td>
@@ -233,7 +319,10 @@ export default function AdminComprasPage() {
                                     type="button"
                                     className="btn btn-success btn-square btn-xs"
                                     disabled={updateStatusMutation.isPending}
-                                    onClick={() => acceptPurchase(purchase.id)}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      openAcceptDialog(purchase.id);
+                                    }}
                                     title="Aceptar compra"
                                     aria-label={`Aceptar compra ${purchase.invoiceNumber || purchase.id}`}
                                   >
@@ -243,7 +332,10 @@ export default function AdminComprasPage() {
                                     type="button"
                                     className="btn btn-ghost btn-square btn-xs text-error"
                                     disabled={updateStatusMutation.isPending}
-                                    onClick={() => cancelPurchase(purchase.id)}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      cancelPurchase(purchase.id);
+                                    }}
                                     title="Anular compra"
                                     aria-label={`Anular compra ${purchase.invoiceNumber || purchase.id}`}
                                   >
@@ -270,6 +362,87 @@ export default function AdminComprasPage() {
             )}
           </div>
         </section>
+        <dialog
+          ref={invoiceDialogRef}
+          className="modal"
+          aria-labelledby="accept-purchase-title"
+          onClose={() => {
+            setAcceptingPurchaseId(null);
+            setInvoiceNumber("");
+            setAcceptError(null);
+          }}
+          onCancel={(event) => {
+            if (updateStatusMutation.isPending) event.preventDefault();
+          }}
+        >
+          <div className="modal-box max-w-md">
+            <h2 id="accept-purchase-title" className="text-xl font-bold">
+              Aceptar compra
+            </h2>
+            <p className="text-base-content/60 mt-2 text-sm">
+              Ingresá el número de factura para registrar la compra y actualizar
+              el inventario.
+            </p>
+            {acceptError && (
+              <p className="mt-4 text-sm text-error" role="alert">
+                {acceptError}
+              </p>
+            )}
+            <form
+              className="mt-4"
+              onSubmit={handleAcceptPurchase}
+            >
+              <fieldset className="fieldset">
+                <legend className="fieldset-legend">
+                  Nº Factura <span className="text-error">*</span>
+                </legend>
+                <input
+                  className="input w-full"
+                  autoFocus
+                  required
+                  value={invoiceNumber}
+                  placeholder="Ej: 001-001-00001234"
+                  disabled={updateStatusMutation.isPending}
+                  onChange={(event) => {
+                    setInvoiceNumber(event.target.value);
+                    setAcceptError(null);
+                  }}
+                />
+              </fieldset>
+              <div className="modal-action">
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={updateStatusMutation.isPending}
+                  onClick={() => invoiceDialogRef.current?.close()}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-success"
+                  disabled={
+                    updateStatusMutation.isPending || !invoiceNumber.trim()
+                  }
+                >
+                  {updateStatusMutation.isPending ? (
+                    <span className="loading loading-spinner loading-sm" />
+                  ) : (
+                    "Aceptar y registrar factura"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button
+              aria-label="Cerrar diálogo"
+              disabled={updateStatusMutation.isPending}
+            >
+              Cerrar
+            </button>
+          </form>
+        </dialog>
     </main>
   );
 }

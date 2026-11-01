@@ -22,6 +22,8 @@ export interface PurchaseBook {
 interface PurchaseItemsSectionProps {
   items: PurchaseItem[];
   books: PurchaseBook[];
+  bookSearch: string;
+  onBookSearchChange: (search: string) => void;
   onAdd: (bookId: string, quantity: number) => void;
   onRemove: (bookId: string) => void;
   onItemChange: (
@@ -31,29 +33,36 @@ interface PurchaseItemsSectionProps {
   isBookPickerOpen: boolean;
   onOpenBookPicker: () => void;
   onCloseBookPicker: () => void;
+  onCreateBook?: () => void;
   hasMoreBooks: boolean;
+  isLoadingBooks: boolean;
   isLoadingMoreBooks: boolean;
   booksError: boolean;
   onLoadMoreBooks: () => void;
   onRetryBooks: () => void;
+  readOnly?: boolean;
 }
 
 export default function PurchaseItemsSection({
   items,
   books,
+  bookSearch,
+  onBookSearchChange,
   onAdd,
   onRemove,
   onItemChange,
   isBookPickerOpen,
   onOpenBookPicker,
   onCloseBookPicker,
+  onCreateBook,
   hasMoreBooks,
+  isLoadingBooks,
   isLoadingMoreBooks,
   booksError,
   onLoadMoreBooks,
   onRetryBooks,
+  readOnly = false,
 }: PurchaseItemsSectionProps) {
-  const [query, setQuery] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const dialogRef = useRef<HTMLDialogElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -67,9 +76,6 @@ export default function PurchaseItemsSection({
     if (isBookPickerOpen && !dialog.open) dialog.showModal();
     if (!isBookPickerOpen && dialog.open) dialog.close();
   }, [isBookPickerOpen]);
-
-  const q = query.trim().toLowerCase();
-  const matches = books.filter((book) => book.title.toLowerCase().includes(q));
 
   useEffect(() => {
     const root = listRef.current;
@@ -103,10 +109,12 @@ export default function PurchaseItemsSection({
               Agregá los libros indicando su costo unitario y cantidad recibida.
             </p>
           </div>
-          <button type="button" className="btn" onClick={onOpenBookPicker}>
-            <Plus className="size-4" strokeWidth={2.5} />
-            Agregar libro
-          </button>
+          {!readOnly && (
+            <button type="button" className="btn" onClick={onOpenBookPicker}>
+              <Plus className="size-4" strokeWidth={2.5} />
+              Agregar libro
+            </button>
+          )}
         </div>
 
         <dialog
@@ -149,30 +157,51 @@ export default function PurchaseItemsSection({
               </button>
             </div>
 
-            <label className="input w-full">
-              <Search className="size-4 opacity-50" strokeWidth={2} />
-              <input
-                type="search"
-                placeholder="Buscar libro por nombre..."
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                aria-label="Buscar libro por nombre"
-                autoFocus
-              />
-            </label>
+            <div className="flex gap-2">
+              <label className="input flex-1">
+                <Search className="size-4 opacity-50" strokeWidth={2} />
+                <input
+                  type="search"
+                  placeholder="Buscar libro por nombre..."
+                  value={bookSearch}
+                  onChange={(event) => onBookSearchChange(event.target.value)}
+                  aria-label="Buscar libro por nombre"
+                  autoFocus
+                />
+              </label>
+              {!readOnly && onCreateBook && (
+                <button
+                  type="button"
+                  className="btn btn-square"
+                  title="Crear libro"
+                  aria-label="Crear libro"
+                  onClick={onCreateBook}
+                >
+                  <Plus className="size-4" strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
 
             <div
               ref={listRef}
               className="max-h-[55vh] min-h-48 overflow-y-auto rounded-box border border-base-300"
               aria-live="polite"
             >
-              {books.length === 0 && !booksError && (
-                <div className="flex min-h-48 items-center justify-center gap-3 p-6 text-sm text-base-content/60">
-                  <span className="loading loading-spinner loading-sm" />
-                  Cargando libros...
+              {!bookSearch.trim() && (
+                <div className="flex min-h-48 items-center justify-center p-6 text-center text-sm text-base-content/60">
+                  Escribí el nombre de un libro para buscarlo.
                 </div>
               )}
-              {booksError && books.length === 0 && (
+              {bookSearch.trim() && isLoadingBooks && (
+                <div className="flex min-h-48 items-center justify-center gap-3 p-6 text-sm text-base-content/60">
+                  <span className="loading loading-spinner loading-sm" />
+                  Buscando libros...
+                </div>
+              )}
+              {bookSearch.trim() &&
+                !isLoadingBooks &&
+                booksError &&
+                books.length === 0 && (
                 <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center">
                   <button
                     type="button"
@@ -183,84 +212,75 @@ export default function PurchaseItemsSection({
                   </button>
                 </div>
               )}
-              {books.length > 0 && matches.length === 0 && !booksError && (
+              {bookSearch.trim() &&
+                !isLoadingBooks &&
+                books.length === 0 &&
+                !booksError && (
                 <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center">
                   <p className="text-sm text-base-content/60">
-                    No hay coincidencias entre los libros cargados.
+                    No se encontraron libros.
                   </p>
-                  {hasMoreBooks && (
-                    <button
-                      type="button"
-                      className="btn btn-sm"
-                      disabled={isLoadingMoreBooks}
-                      onClick={onLoadMoreBooks}
-                    >
-                      {isLoadingMoreBooks ? (
-                        <span className="loading loading-spinner loading-xs" />
-                      ) : (
-                        "Cargar los siguientes 25"
-                      )}
-                    </button>
-                  )}
                 </div>
               )}
-              {matches.map((book) => {
-                const isAdded = items.some((item) => item.bookId === book.id);
-                const quantity = quantities[book.id] ?? 1;
-                return (
-                  <div
-                    key={book.id}
-                    className="flex items-center gap-2 border-b border-base-200 p-2 last:border-b-0 sm:gap-3 sm:p-3"
-                  >
-                    {book.coverUrl ? (
-                      <img
-                        src={book.coverUrl}
-                        alt={`Portada de ${book.title}`}
-                        className="aspect-[3/4] w-10 shrink-0 rounded object-cover"
-                      />
-                    ) : (
-                      <div
-                        className="flex aspect-[3/4] w-10 shrink-0 items-center justify-center rounded bg-base-200 text-base-content/40"
-                        aria-label="Libro sin portada"
-                      >
-                        <BookOpen className="size-5" />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold sm:text-sm">
-                        {book.title}
-                      </p>
-                      <div className="mt-1 flex items-center justify-end gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-base-content/60 text-[10px]">
-                            Cant.
-                          </span>
-                          <QuantitySelector
-                            value={quantity}
-                            onChange={(nextQuantity) =>
-                              setQuantities((current) => ({
-                                ...current,
-                                [book.id]: nextQuantity,
-                              }))
-                            }
-                            label={`Cantidad de ${book.title}`}
-                            size="xs"
-                            disabled={isAdded}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          className="btn btn-xs shrink-0"
-                          disabled={isAdded}
-                          onClick={() => onAdd(book.id, quantity)}
+              {bookSearch.trim() &&
+                !isLoadingBooks &&
+                books.map((book) => {
+                  const isAdded = items.some((item) => item.bookId === book.id);
+                  const quantity = quantities[book.id] ?? 1;
+                  return (
+                    <div
+                      key={book.id}
+                      className="flex items-center gap-2 border-b border-base-200 p-2 last:border-b-0 sm:gap-3 sm:p-3"
+                    >
+                      {book.coverUrl ? (
+                        <img
+                          src={book.coverUrl}
+                          alt={`Portada de ${book.title}`}
+                          className="aspect-[3/4] w-10 shrink-0 rounded object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="flex aspect-[3/4] w-10 shrink-0 items-center justify-center rounded bg-base-200 text-base-content/40"
+                          aria-label="Libro sin portada"
                         >
-                          {isAdded ? "Agregado" : "Agregar"}
-                        </button>
+                          <BookOpen className="size-5" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold sm:text-sm">
+                          {book.title}
+                        </p>
+                        <div className="mt-1 flex items-center justify-end gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base-content/60 text-[10px]">
+                              Cant.
+                            </span>
+                            <QuantitySelector
+                              value={quantity}
+                              onChange={(nextQuantity) =>
+                                setQuantities((current) => ({
+                                  ...current,
+                                  [book.id]: nextQuantity,
+                                }))
+                              }
+                              label={`Cantidad de ${book.title}`}
+                              size="xs"
+                              disabled={isAdded}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-xs shrink-0"
+                            disabled={isAdded}
+                            onClick={() => onAdd(book.id, quantity)}
+                          >
+                            {isAdded ? "Agregado" : "Agregar"}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               {booksError && books.length > 0 && (
                 <div className="flex items-center justify-center gap-3 p-3 text-sm">
                   <button
@@ -272,7 +292,7 @@ export default function PurchaseItemsSection({
                   </button>
                 </div>
               )}
-              {hasMoreBooks && matches.length > 0 && !booksError && (
+              {hasMoreBooks && books.length > 0 && !booksError && (
                 <div
                   ref={loadMoreRef}
                   className="flex min-h-12 items-center justify-center"
@@ -298,60 +318,73 @@ export default function PurchaseItemsSection({
                 <th className="w-28">Cantidad</th>
                 <th className="w-36">Costo Unit. (Gs)</th>
                 <th className="text-right">Subtotal (Gs)</th>
-                <th className="text-center">Acción</th>
+                {!readOnly && <th className="text-center">Acción</th>}
               </tr>
             </thead>
             <tbody>
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-base-content/60 py-8 text-center text-sm">
+                  <td
+                    colSpan={readOnly ? 4 : 5}
+                    className="text-base-content/60 py-8 text-center text-sm"
+                  >
                     Sin ítems todavía. Agregá un libro para comenzar.
                   </td>
                 </tr>
               )}
               {items.map((item) => {
                 const book = booksById.get(item.bookId);
-                if (!book) return null;
+                const title = book?.title ?? `Libro #${item.bookId}`;
                 return (
                   <tr key={item.bookId}>
-                    <td className="font-medium">{book.title}</td>
+                    <td className="font-medium">{title}</td>
                     <td>
-                      <EditableNumberInput
-                        value={item.quantity}
-                        min={1}
-                        step={1}
-                        label={`Cantidad de ${book.title}`}
-                        className="input input-sm w-20 text-center"
-                        onChange={(quantity) =>
-                          onItemChange(item.bookId, { quantity })
-                        }
-                      />
+                      {readOnly ? (
+                        item.quantity
+                      ) : (
+                        <EditableNumberInput
+                          value={item.quantity}
+                          min={1}
+                          step={1}
+                          label={`Cantidad de ${title}`}
+                          className="input input-sm w-20 text-center"
+                          onChange={(quantity) =>
+                            onItemChange(item.bookId, { quantity })
+                          }
+                        />
+                      )}
                     </td>
                     <td>
-                      <EditableNumberInput
-                        value={item.unitCost}
-                        min={0}
-                        step={500}
-                        label={`Costo unitario de ${book.title}`}
-                        className="input input-sm w-28 text-right"
-                        onChange={(unitCost) =>
-                          onItemChange(item.bookId, { unitCost })
-                        }
-                      />
+                      {readOnly ? (
+                        `${formatGs(item.unitCost)} Gs`
+                      ) : (
+                        <EditableNumberInput
+                          value={item.unitCost}
+                          min={0}
+                          step={500}
+                          label={`Costo unitario de ${title}`}
+                          className="input input-sm w-28 text-right"
+                          onChange={(unitCost) =>
+                            onItemChange(item.bookId, { unitCost })
+                          }
+                        />
+                      )}
                     </td>
                     <td className="text-right font-semibold">
                       {formatGs(item.quantity * item.unitCost)} Gs
                     </td>
-                    <td className="text-center">
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-circle btn-sm text-error"
-                        aria-label={`Eliminar ${book.title}`}
-                        onClick={() => onRemove(item.bookId)}
-                      >
-                        <Trash2 className="size-4" strokeWidth={2} />
-                      </button>
-                    </td>
+                    {!readOnly && (
+                      <td className="text-center">
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-circle btn-sm text-error"
+                          aria-label={`Eliminar ${title}`}
+                          onClick={() => onRemove(item.bookId)}
+                        >
+                          <Trash2 className="size-4" strokeWidth={2} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}

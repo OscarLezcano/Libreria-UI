@@ -87,13 +87,34 @@ export async function getSuppliersRequest(
   };
 }
 
-export async function getAllSuppliersRequest(): Promise<SupplierRecord[]> {
-  const firstPage = await getSuppliersRequest(1);
+export async function getSupplierByIdRequest(
+  id: string
+): Promise<SupplierRecord | null> {
+  const response = await fetch(apiUrl(`${SUPPLIERS_URL}/${id}`), {
+    headers: getAuthHeaders(),
+  });
+
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw getSupplierError(response, "No se pudo cargar el proveedor");
+  }
+
+  const result: SupplierItemResponse = await response.json();
+  return parseSupplier(result.data);
+}
+
+export async function searchSuppliersRequest(
+  search: string
+): Promise<SupplierRecord[]> {
+  const term = search.trim();
+  if (!term) return [];
+
+  const firstPage = await getSuppliersRequest(1, PAGE_SIZE, term);
   if (firstPage.totalPages === 1) return firstPage.suppliers;
 
   const remainingPages = await Promise.all(
     Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-      getSuppliersRequest(index + 2)
+      getSuppliersRequest(index + 2, PAGE_SIZE, term)
     )
   );
 
