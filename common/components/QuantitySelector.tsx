@@ -8,6 +8,7 @@ interface QuantitySelectorProps {
   value: number;
   onChange: (quantity: number) => void;
   label: string;
+  min?: number;
   size?: "sm" | "xs";
   disabled?: boolean;
 }
@@ -16,6 +17,7 @@ export default function QuantitySelector({
   value,
   onChange,
   label,
+  min = 1,
   size = "sm",
   disabled = false,
 }: QuantitySelectorProps) {
@@ -23,7 +25,7 @@ export default function QuantitySelector({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const updateQuantity = (quantity: number) => {
-    const nextQuantity = Math.max(1, quantity);
+    const nextQuantity = Math.max(min, quantity);
     if (inputRef.current) inputRef.current.value = String(nextQuantity);
     onChange(nextQuantity);
   };
@@ -34,14 +36,14 @@ export default function QuantitySelector({
         type="button"
         className={`btn btn-neutral join-item ${isCompact ? "btn-xs size-7 min-h-7 px-1" : "btn-sm"}`}
         aria-label={`${label}: disminuir`}
-        disabled={disabled || value <= 1}
+        disabled={disabled || value <= min}
         onClick={() => updateQuantity(value - 1)}
       >
         <Minus className="size-3" strokeWidth={2.5} />
       </button>
       <EditableNumberInput
         value={value}
-        min={1}
+        min={min}
         step={1}
         onChange={onChange}
         label={label}

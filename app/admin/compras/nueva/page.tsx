@@ -39,12 +39,12 @@ function toPurchaseBooks(records: BookRecord[]): PurchaseBook[] {
   return records.flatMap((book) =>
     book.id !== null && book.title
       ? [
-          {
-            id: String(book.id),
-            title: book.title,
-            coverUrl: book.coverUrl,
-          },
-        ]
+        {
+          id: String(book.id),
+          title: book.title,
+          coverUrl: book.coverUrl,
+        },
+      ]
       : []
   );
 }
@@ -113,10 +113,10 @@ function NuevaCompraContent() {
     : draftSupplierId;
   const purchaseItems: PurchaseItem[] = isViewingPurchase
     ? purchaseDetails.map((detail) => ({
-        bookId: detail.bookId,
-        quantity: detail.quantity,
-        unitCost: detail.unitCost,
-      }))
+      bookId: detail.bookId,
+      quantity: detail.quantity,
+      unitCost: detail.unitCost,
+    }))
     : draftItems;
   const isPurchaseLoading =
     isViewingPurchase &&
@@ -186,17 +186,17 @@ function NuevaCompraContent() {
   );
   const purchaseBooks: PurchaseBook[] = isViewingPurchase
     ? purchaseDetails.map((detail) => ({
-        id: detail.bookId,
-        title: detail.bookName,
-        coverUrl: null,
-      }))
+      id: detail.bookId,
+      title: detail.bookName,
+      coverUrl: null,
+    }))
     : (() => {
-        const loadedIds = new Set(loadedBooks.map((book) => book.id));
-        return [
-          ...loadedBooks,
-          ...knownBooks.filter((book) => !loadedIds.has(book.id)),
-        ];
-      })();
+      const loadedIds = new Set(loadedBooks.map((book) => book.id));
+      return [
+        ...loadedBooks,
+        ...knownBooks.filter((book) => !loadedIds.has(book.id)),
+      ];
+    })();
   const isLoadingBookSearch =
     bookSearch.trim().length > 0 &&
     (bookSearch.trim() !== bookSearchTerm ||
@@ -413,16 +413,8 @@ function NuevaCompraContent() {
                 <h2 className="card-title border-b border-base-200 pb-2 text-lg">
                   {isViewingPurchase ? "Proveedor" : "Datos del Proveedor"}
                 </h2>
-                <p className="text-base-content/60 text-sm">
-                  {isViewingPurchase
-                    ? "Proveedor asociado a esta compra."
-                    : "La compra se registrará como pendiente. Podés aceptarla desde el historial cuando llegue la mercadería."}
-                </p>
                 <div className="grid grid-cols-1 gap-5">
                   <fieldset className="fieldset">
-                    <legend className="fieldset-legend">
-                      Proveedor <span className="text-error">*</span>
-                    </legend>
                     <div className="flex gap-2">
                       <div className="relative min-w-0 flex-1">
                         <label className="input w-full">
@@ -475,7 +467,7 @@ function NuevaCompraContent() {
                             className="absolute top-full z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-box border border-base-300 bg-base-100 shadow-lg"
                           >
                             {supplierSearch.trim() !== supplierSearchTerm ||
-                            suppliersQuery.isFetching ? (
+                              suppliersQuery.isFetching ? (
                               <p className="px-3 py-2 text-sm text-base-content/60">
                                 Buscando proveedores...
                               </p>
@@ -561,7 +553,7 @@ function NuevaCompraContent() {
             onRetryBooks={() => void booksQuery.refetch()}
             readOnly={isViewingPurchase}
           />
-      </div>
+        </div>
       )}
       <BookModal
         isOpen={isBookModalOpen}

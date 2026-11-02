@@ -11,6 +11,7 @@ export interface PurchaseItem {
   bookId: string;
   quantity: number;
   unitCost: number;
+  systemQuantity?: number;
 }
 
 export interface PurchaseBook {
@@ -22,9 +23,11 @@ export interface PurchaseBook {
 interface PurchaseItemsSectionProps {
   items: PurchaseItem[];
   books: PurchaseBook[];
+  bookQuantities?: Record<string, number>;
+  bookQuantitiesError?: boolean;
   bookSearch: string;
   onBookSearchChange: (search: string) => void;
-  onAdd: (bookId: string, quantity: number) => void;
+  onAdd: (bookId: string, quantity: number) => void | Promise<void>;
   onRemove: (bookId: string) => void;
   onItemChange: (
     bookId: string,
@@ -41,11 +44,14 @@ interface PurchaseItemsSectionProps {
   onLoadMoreBooks: () => void;
   onRetryBooks: () => void;
   readOnly?: boolean;
+  mode?: "purchase" | "stock-adjustment";
 }
 
 export default function PurchaseItemsSection({
   items,
   books,
+  bookQuantities = {},
+  bookQuantitiesError = false,
   bookSearch,
   onBookSearchChange,
   onAdd,
@@ -62,8 +68,10 @@ export default function PurchaseItemsSection({
   onLoadMoreBooks,
   onRetryBooks,
   readOnly = false,
+  mode = "purchase",
 }: PurchaseItemsSectionProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [addingBookId, setAddingBookId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -98,16 +106,26 @@ export default function PurchaseItemsSection({
     (sum, item) => sum + item.quantity * item.unitCost,
     0
   );
+  const isStockAdjustment = mode === "stock-adjustment";
+
+  const addBook = async (bookId: string, quantity: number) => {
+    if (addingBookId !== null) return;
+    setAddingBookId(bookId);
+    try {
+      await onAdd(bookId, quantity);
+    } finally {
+      setAddingBookId(null);
+    }
+  };
 
   return (
     <section className="card bg-base-100 card-border">
       <div className="card-body">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-lg font-bold">Ítems de la Compra</h2>
-            <p className="text-base-content/60 text-xs">
-              Agregá los libros indicando su costo unitario y cantidad recibida.
-            </p>
+            <h2 className="text-lg font-bold">
+              {isStockAdjustment ? "Libros del ajuste" : "Ítems de la Compra"}
+            </h2>
           </div>
           {!readOnly && (
             <button type="button" className="btn" onClick={onOpenBookPicker}>
@@ -144,7 +162,9 @@ export default function PurchaseItemsSection({
                   Agregar libro
                 </h3>
                 <p className="text-base-content/60 mt-1 text-sm">
-                  Buscá por nombre y seleccioná los títulos para la compra.
+                  {isStockAdjustment
+                    ? "Buscá los libros del conteo físico y agregalos al ajuste."
+                    : "Buscá por nombre y seleccioná los títulos para la compra."}
                 </p>
               </div>
               <button
@@ -202,31 +222,39 @@ export default function PurchaseItemsSection({
                 !isLoadingBooks &&
                 booksError &&
                 books.length === 0 && (
-                <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center">
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    onClick={onRetryBooks}
-                  >
-                    Reintentar carga de libros
-                  </button>
-                </div>
-              )}
+                  <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center">
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={onRetryBooks}
+                    >
+                      Reintentar carga de libros
+                    </button>
+                  </div>
+                )}
               {bookSearch.trim() &&
                 !isLoadingBooks &&
                 books.length === 0 &&
                 !booksError && (
-                <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center">
-                  <p className="text-sm text-base-content/60">
-                    No se encontraron libros.
-                  </p>
-                </div>
-              )}
+                  <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center">
+                    <p className="text-sm text-base-content/60">
+                      No se encontraron libros.
+                    </p>
+                  </div>
+                )}
               {bookSearch.trim() &&
                 !isLoadingBooks &&
                 books.map((book) => {
                   const isAdded = items.some((item) => item.bookId === book.id);
-                  const quantity = quantities[book.id] ?? 1;
+                  const availableQuantity = bookQuantities[book.id];
+                  const hasAvailableQuantity = availableQuantity !== undefined;
+                  const quantity =
+                    quantities[book.id] ??
+                    (isStockAdjustment ? availableQuantity ?? 0 : 1);
+                  const quantityLoadFailed =
+                    isStockAdjustment &&
+                    bookQuantitiesError &&
+                    !hasAvailableQuantity;
                   return (
                     <div
                       key={book.id}
@@ -251,9 +279,14 @@ export default function PurchaseItemsSection({
                           {book.title}
                         </p>
                         <div className="mt-1 flex items-center justify-end gap-2">
-                          <div className="flex items-center gap-1.5">
+                          {quantityLoadFailed ? (
+                            <span className="text-error text-xs">
+                              No se pudo cargar el stock
+                            </span>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
                             <span className="text-base-content/60 text-[10px]">
-                              Cant.
+                              {isStockAdjustment ? "Conteo" : "Cant."}
                             </span>
                             <QuantitySelector
                               value={quantity}
@@ -263,18 +296,35 @@ export default function PurchaseItemsSection({
                                   [book.id]: nextQuantity,
                                 }))
                               }
-                              label={`Cantidad de ${book.title}`}
+                              label={
+                                isStockAdjustment
+                                  ? `Conteo físico de ${book.title}`
+                                  : `Cantidad de ${book.title}`
+                              }
+                              min={isStockAdjustment ? 0 : 1}
                               size="xs"
-                              disabled={isAdded}
+                              disabled={isAdded || addingBookId !== null}
                             />
-                          </div>
+                            </div>
+                          )}
                           <button
                             type="button"
                             className="btn btn-xs shrink-0"
-                            disabled={isAdded}
-                            onClick={() => onAdd(book.id, quantity)}
+                            disabled={
+                              isAdded ||
+                              addingBookId !== null ||
+                              quantityLoadFailed ||
+                              (isStockAdjustment && !hasAvailableQuantity)
+                            }
+                            onClick={() => void addBook(book.id, quantity)}
                           >
-                            {isAdded ? "Agregado" : "Agregar"}
+                            {addingBookId === book.id ? (
+                              <span className="loading loading-spinner loading-xs" />
+                            ) : isAdded ? (
+                              "Agregado"
+                            ) : (
+                              "Agregar"
+                            )}
                           </button>
                         </div>
                       </div>
@@ -315,9 +365,18 @@ export default function PurchaseItemsSection({
             <thead>
               <tr>
                 <th>Título del Libro</th>
-                <th className="w-28">Cantidad</th>
-                <th className="w-36">Costo Unit. (Gs)</th>
-                <th className="text-right">Subtotal (Gs)</th>
+                {isStockAdjustment ? (
+                  <>
+                    <th className="w-28 text-right">Sistema</th>
+                    <th className="w-36">Conteo físico</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="w-28">Cantidad</th>
+                    <th className="w-36">Costo Unit. (Gs)</th>
+                    <th className="text-right">Subtotal (Gs)</th>
+                  </>
+                )}
                 {!readOnly && <th className="text-center">Acción</th>}
               </tr>
             </thead>
@@ -325,7 +384,15 @@ export default function PurchaseItemsSection({
               {items.length === 0 && (
                 <tr>
                   <td
-                    colSpan={readOnly ? 4 : 5}
+                    colSpan={
+                      isStockAdjustment
+                        ? readOnly
+                          ? 3
+                          : 4
+                        : readOnly
+                          ? 4
+                          : 5
+                    }
                     className="text-base-content/60 py-8 text-center text-sm"
                   >
                     Sin ítems todavía. Agregá un libro para comenzar.
@@ -338,41 +405,63 @@ export default function PurchaseItemsSection({
                 return (
                   <tr key={item.bookId}>
                     <td className="font-medium">{title}</td>
-                    <td>
-                      {readOnly ? (
-                        item.quantity
-                      ) : (
-                        <EditableNumberInput
-                          value={item.quantity}
-                          min={1}
-                          step={1}
-                          label={`Cantidad de ${title}`}
-                          className="input input-sm w-20 text-center"
-                          onChange={(quantity) =>
-                            onItemChange(item.bookId, { quantity })
-                          }
-                        />
-                      )}
-                    </td>
-                    <td>
-                      {readOnly ? (
-                        `${formatGs(item.unitCost)} Gs`
-                      ) : (
-                        <EditableNumberInput
-                          value={item.unitCost}
-                          min={0}
-                          step={500}
-                          label={`Costo unitario de ${title}`}
-                          className="input input-sm w-28 text-right"
-                          onChange={(unitCost) =>
-                            onItemChange(item.bookId, { unitCost })
-                          }
-                        />
-                      )}
-                    </td>
-                    <td className="text-right font-semibold">
-                      {formatGs(item.quantity * item.unitCost)} Gs
-                    </td>
+                    {isStockAdjustment ? (
+                      <>
+                        <td className="text-right tabular-nums">
+                          {item.systemQuantity ?? 0}
+                        </td>
+                        <td>
+                          {readOnly ? (
+                            item.quantity
+                          ) : (
+                            <QuantitySelector
+                              value={item.quantity}
+                              label={`Conteo físico de ${title}`}
+                              min={0}
+                              onChange={(quantity) => onItemChange(item.bookId, { quantity })}
+                            />
+                          )}
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td>
+                          {readOnly ? (
+                            item.quantity
+                          ) : (
+                            <EditableNumberInput
+                              value={item.quantity}
+                              min={1}
+                              step={1}
+                              label={`Cantidad de ${title}`}
+                              className="input input-sm w-20 text-center"
+                              onChange={(quantity) =>
+                                onItemChange(item.bookId, { quantity })
+                              }
+                            />
+                          )}
+                        </td>
+                        <td>
+                          {readOnly ? (
+                            `${formatGs(item.unitCost)} Gs`
+                          ) : (
+                            <EditableNumberInput
+                              value={item.unitCost}
+                              min={0}
+                              step={500}
+                              label={`Costo unitario de ${title}`}
+                              className="input input-sm w-28 text-right"
+                              onChange={(unitCost) =>
+                                onItemChange(item.bookId, { unitCost })
+                              }
+                            />
+                          )}
+                        </td>
+                        <td className="text-right font-semibold">
+                          {formatGs(item.quantity * item.unitCost)} Gs
+                        </td>
+                      </>
+                    )}
                     {!readOnly && (
                       <td className="text-center">
                         <button
@@ -392,17 +481,21 @@ export default function PurchaseItemsSection({
           </table>
         </div>
 
-        <div className="flex flex-col items-end justify-between gap-3 sm:flex-row sm:items-center">
-          <span className="text-base-content/50 text-xs">
-            Totales calculados automáticamente según ítems añadidos.
-          </span>
-          <div className="rounded-box bg-base-200 flex items-center gap-4 border border-base-300 px-5 py-3">
-            <span className="text-base-content/60 text-xs font-bold tracking-wider uppercase">
-              Total de la Compra:
+        {!isStockAdjustment && (
+          <div className="flex flex-col items-end justify-between gap-3 sm:flex-row sm:items-center">
+            <span className="text-base-content/50 text-xs">
+              Totales calculados automáticamente según ítems añadidos.
             </span>
-            <span className="text-2xl font-extrabold">{formatGs(total)} Gs</span>
+            <div className="rounded-box bg-base-200 flex items-center gap-4 border border-base-300 px-5 py-3">
+              <span className="text-base-content/60 text-xs font-bold tracking-wider uppercase">
+                Total de la Compra:
+              </span>
+              <span className="text-2xl font-extrabold">
+                {formatGs(total)} Gs
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

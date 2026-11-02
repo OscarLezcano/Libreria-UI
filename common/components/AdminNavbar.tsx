@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const ADMIN_MENU = [
   { label: "Inicio", href: "/" },
   { label: "Catálogo", href: "/admin/libros" },
-  { label: "Inventario", href: "#" },
+  { label: "Inventario", href: "/admin/inventario" },
   { label: "Compras", href: "/admin/compras" },
   { label: "Proveedores", href: "/admin/proveedores" },
 ] as const;
@@ -15,9 +15,11 @@ export default function AdminNavbar() {
   const pathname = usePathname();
   const active = pathname.startsWith("/admin/libros")
     ? "Catálogo"
-    : pathname.startsWith("/admin/proveedores")
-      ? "Proveedores"
-      : "Compras";
+    : pathname.startsWith("/admin/inventario")
+      ? "Inventario"
+      : pathname.startsWith("/admin/proveedores")
+        ? "Proveedores"
+        : "Compras";
 
   return (
     <header className="border-b border-base-300 bg-base-100">

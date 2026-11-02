@@ -19,6 +19,10 @@ export interface CatalogEntity {
   name: string | null;
 }
 
+interface StockRecord {
+  quantity: number;
+}
+
 interface ListResponse<T> {
   data: T[];
   pagination?: {
@@ -117,6 +121,32 @@ export async function getBookByIdRequest(
 
   const result: ItemResponse<BookRecord> = await response.json();
   return result.data;
+}
+
+export async function getBookStockQuantityRequest(
+  warehouseId: number,
+  bookId: number
+): Promise<number> {
+  const response = await fetch(
+    apiUrl(`stock/stocks/warehouse/${warehouseId}/book/${bookId}`),
+    { headers: getAuthHeaders() }
+  );
+
+  if (response.status === 404) return 0;
+  if (!response.ok) {
+    throw new Error(
+      response.status === 401 || response.status === 403
+        ? "No tienes permisos para consultar el inventario."
+        : `No se pudo cargar el stock del libro #${bookId} (HTTP ${response.status}).`
+    );
+  }
+
+  const result: ItemResponse<StockRecord> = await response.json();
+  if (!Number.isSafeInteger(result.data?.quantity) || result.data.quantity < 0) {
+    throw new Error(`La API devolvió una cantidad inválida para el libro #${bookId}.`);
+  }
+
+  return result.data.quantity;
 }
 
 export async function getAuthorByIdRequest(

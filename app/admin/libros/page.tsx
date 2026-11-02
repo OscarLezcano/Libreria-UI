@@ -10,18 +10,33 @@ import { useGenresByIds } from "@/common/hooks/useGenresByIds";
 import {
   BOOKS_PAGE_SIZE,
   createBookRequest,
+  getBookStockQuantityRequest,
   getBooksPageRequest,
   type CatalogEntity,
   updateBookRequest,
   type BookRecord,
 } from "@/common/services/books";
+import { getAuthenticatedWarehouseId } from "@/common/services/auth";
 import { formatGs } from "@/common/utils/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 type AdminBook = bookInputType & { id: string };
 const EMPTY_BOOKS: BookRecord[] = [];
+
+function subscribeToUserStorage(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
+
+function getWarehouseSnapshot() {
+  return getAuthenticatedWarehouseId() ?? 0;
+}
+
+function getServerWarehouseSnapshot() {
+  return -1;
+}
 
 function toAdminBook(
   book: BookRecord,
@@ -49,6 +64,13 @@ function toAdminBook(
 
 export default function AdminLibrosPage() {
   const queryClient = useQueryClient();
+  const warehouseSnapshot = useSyncExternalStore(
+    subscribeToUserStorage,
+    getWarehouseSnapshot,
+    getServerWarehouseSnapshot
+  );
+  const warehouseLoaded = warehouseSnapshot !== -1;
+  const warehouseId = warehouseSnapshot > 0 ? warehouseSnapshot : null;
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const booksQuery = useQuery({
@@ -61,6 +83,28 @@ export default function AdminLibrosPage() {
     staleTime: 60_000,
   });
   const bookRecords = booksQuery.data?.books ?? EMPTY_BOOKS;
+  const stockBookIds = bookRecords.flatMap((book) =>
+    book.id === null ? [] : [book.id]
+  );
+  const stocksQuery = useQuery({
+    queryKey: ["stocks", "warehouse", warehouseId, stockBookIds],
+    queryFn: async () => {
+      if (warehouseId === null) {
+        throw new Error("No se encontró un almacén asignado al usuario.");
+      }
+
+      const quantities: Record<number, number> = {};
+      for (const bookId of stockBookIds) {
+        quantities[bookId] = await getBookStockQuantityRequest(
+          warehouseId,
+          bookId
+        );
+      }
+      return quantities;
+    },
+    enabled: warehouseId !== null && stockBookIds.length > 0,
+    staleTime: 60_000,
+  });
   const authorsQuery = useAuthorsByIds(
     bookRecords.flatMap((book) => book.authorIds ?? [])
   );
@@ -101,6 +145,7 @@ export default function AdminLibrosPage() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["books", "catalog"] }),
         queryClient.invalidateQueries({ queryKey: ["books", "detail"] }),
+        queryClient.invalidateQueries({ queryKey: ["stocks", "warehouse"] }),
       ]);
       setIsModalOpen(false);
       setSubmissionError(null);
@@ -206,6 +251,7 @@ export default function AdminLibrosPage() {
                         <th>Título</th>
                         <th>Autores</th>
                         <th>Géneros</th>
+                        <th>Existencias</th>
                         <th className="text-right">Precio</th>
                       </tr>
                     </thead>
@@ -213,7 +259,7 @@ export default function AdminLibrosPage() {
                       {books.length === 0 && (
                         <tr>
                           <td
-                            colSpan={5}
+                            colSpan={6}
                             className="text-base-content/60 py-8 text-center text-sm"
                           >
                             No se encontraron libros.
@@ -260,6 +306,33 @@ export default function AdminLibrosPage() {
                               )}
                             </div>
                           </td>
+                          <td>
+                            {!warehouseLoaded ? (
+                              <span
+                                className="loading loading-spinner loading-xs"
+                                role="status"
+                                aria-label="Cargando almacén"
+                              />
+                            ) : warehouseId === null || stocksQuery.isError ? (
+                              <span className="text-base-content/60">—</span>
+                            ) : stocksQuery.isPending ? (
+                              <span
+                                className="loading loading-spinner loading-xs"
+                                role="status"
+                                aria-label="Cargando existencias"
+                              />
+                            ) : (
+                              <span
+                                className={`badge badge-sm ${
+                                  (stocksQuery.data?.[Number(book.id)] ?? 0) > 0
+                                    ? "badge-success"
+                                    : "badge-error"
+                                }`}
+                              >
+                                {stocksQuery.data?.[Number(book.id)] ?? 0}
+                              </span>
+                            )}
+                          </td>
                           <td className="text-right text-sm font-semibold">
                             {book.price
                               ? `${formatGs(Number(book.price))} Gs`
@@ -270,6 +343,22 @@ export default function AdminLibrosPage() {
                     </tbody>
                   </table>
                 </div>
+                {warehouseLoaded && warehouseId === null && (
+                  <div className="alert alert-warning mt-3 text-sm" role="alert">
+                    Tu usuario no tiene un almacén asignado; no se pueden consultar las existencias.
+                  </div>
+                )}
+                {stocksQuery.isError && (
+                  <NotificationToast
+                    type="error"
+                    message={
+                      stocksQuery.error instanceof Error
+                        ? stocksQuery.error.message
+                        : "No se pudieron cargar las existencias."
+                    }
+                    placement="toast"
+                  />
+                )}
                 <Pagination
                   page={page}
                   totalPages={booksQuery.data?.totalPages ?? 1}
