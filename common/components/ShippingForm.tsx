@@ -14,6 +14,8 @@ interface ShippingFormProps {
 }
 
 const EMPTY_DATA: ShippingData = {
+  nombre: "",
+  apellido: "",
   departamento: "",
   ciudad: "",
   direccion: "",
@@ -24,7 +26,10 @@ export default function ShippingForm({
   onSubmit,
   initial,
 }: ShippingFormProps) {
-  const [data, setData] = useState<ShippingData>(initial ?? EMPTY_DATA);
+  const [data, setData] = useState<ShippingData>({
+    ...EMPTY_DATA,
+    ...initial,
+  });
 
   const update = (field: keyof ShippingData, value: string) =>
     setData((current) => ({
@@ -43,6 +48,34 @@ export default function ShippingForm({
     >
       <div className="card-body gap-5">
         <h2 className="card-title text-base">Datos de envío</h2>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Nombre</legend>
+            <input
+              type="text"
+              className="input w-full"
+              required
+              autoComplete="given-name"
+              placeholder="Nombre"
+              value={data.nombre}
+              onChange={(e) => update("nombre", e.target.value)}
+            />
+          </fieldset>
+
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Apellido</legend>
+            <input
+              type="text"
+              className="input w-full"
+              required
+              autoComplete="family-name"
+              placeholder="Apellido"
+              value={data.apellido}
+              onChange={(e) => update("apellido", e.target.value)}
+            />
+          </fieldset>
+        </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <fieldset className="fieldset">

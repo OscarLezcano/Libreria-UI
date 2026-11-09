@@ -9,8 +9,9 @@ import { useCart } from "@/common/context/CartContext";
 import { couponDiscount, findCoupon } from "@/common/data/coupons";
 import { useCartBooks } from "@/common/hooks/useBookCatalog";
 import {
+  type CreatedOrder,
   createOrderRequest,
-  // markOrderAsPaidRequest,
+  markOrderAsPaidRequest,
 } from "@/common/services/sales";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -20,7 +21,7 @@ const formatGs = (value: number) =>
   new Intl.NumberFormat("es-PY").format(value);
 
 interface PaidData {
-  orderId: string;
+  orderNumber: string;
 }
 
 export default function PagoPage() {
@@ -29,7 +30,8 @@ export default function PagoPage() {
     items.map((item) => item.bookId)
   );
   const [paid, setPaid] = useState<PaidData | null>(null);
-  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
 
   const lines = items.flatMap((item) => {
@@ -53,23 +55,34 @@ export default function PagoPage() {
     );
 
   const handlePaid = async () => {
-    let orderId = createdOrderId;
-    if (!orderId) {
-      orderId = await createOrderRequest({
-        items: lines.map(({ item }) => ({
-          bookId: Number(item.bookId),
-          quantity: item.quantity,
-        })),
-        ...(coupon ? { couponCode: coupon } : {}),
-      });
-      setCreatedOrderId(orderId);
-    }
+    try {
+      setPaymentError(null);
+      let order = createdOrder;
+      if (!order) {
+        order = await createOrderRequest({
+          items: lines.map(({ item }) => ({
+            bookId: Number(item.bookId),
+            quantity: item.quantity,
+          })),
+          invoiceName: shipping?.nombre ?? "",
+          invoiceLastName: shipping?.apellido ?? "",
+          ...(coupon ? { couponCode: coupon } : {}),
+        });
+        setCreatedOrder(order);
+      }
 
-    // await markOrderAsPaidRequest(orderId);
-    setPaid({ orderId });
-    clear();
-    setShowToast(true);
-    window.setTimeout(() => setShowToast(false), 5000);
+      await markOrderAsPaidRequest(order.id);
+      setPaid({ orderNumber: order.orderNumber });
+      clear();
+      setShowToast(true);
+      window.setTimeout(() => setShowToast(false), 5000);
+    } catch (error) {
+      setPaymentError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo completar el pago. Intentá nuevamente."
+      );
+    }
   };
 
   return (
@@ -89,7 +102,7 @@ export default function PagoPage() {
                   ¡Pago aprobado!
                 </h2>
                 <p className="text-base-content/60 mt-2 text-sm">
-                  N° de pedido: <b className="text-base-content">#{paid.orderId}</b>
+                  N° de pedido: <b className="text-base-content">{paid.orderNumber}</b>
                 </p>
                 <div className="card-actions mt-4 flex-col justify-center gap-2">
                   <Link href="/explorar" className="btn btn-primary w-full">
@@ -142,6 +155,13 @@ export default function PagoPage() {
             </p>
 
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+              {paymentError && (
+                <NotificationToast
+                  type="error"
+                  message={paymentError}
+                  className="lg:col-span-2"
+                />
+              )}
               <PaymentForm total={total} onPaid={handlePaid} />
 
               <aside className="flex flex-col gap-4 self-start">
@@ -195,7 +215,7 @@ export default function PagoPage() {
       {showToast && (
         <NotificationToast
           type="success"
-          message={`Pago confirmado · pedido #${paid?.orderId}`}
+          message={`Pago confirmado · pedido ${paid?.orderNumber}`}
           placement="toast"
           onClose={() => setShowToast(false)}
         />
