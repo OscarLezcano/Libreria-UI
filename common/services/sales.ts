@@ -3,11 +3,18 @@ import { apiUrl, getAuthHeaders } from "@/common/services/http";
 export interface CreateOrderInput {
   items: { bookId: number; quantity: number }[];
   couponCode?: string;
+  invoiceName: string;
+  invoiceLastName: string;
+}
+
+export interface CreatedOrder {
+  id: string;
+  orderNumber: string;
 }
 
 export async function createOrderRequest(
   order: CreateOrderInput
-): Promise<string> {
+): Promise<CreatedOrder> {
   const response = await fetch(apiUrl("sales/orders"), {
     method: "POST",
     headers: getAuthHeaders(),
@@ -19,16 +26,25 @@ export async function createOrderRequest(
   }
 
   const result: { data?: unknown } = await response.json();
-  if (!result.data || typeof result.data !== "object" || !("id" in result.data)) {
-    throw new Error("La respuesta del pedido no contiene su identificador.");
+  if (
+    !result.data ||
+    typeof result.data !== "object" ||
+    !("id" in result.data) ||
+    !("orderNumber" in result.data)
+  ) {
+    throw new Error("La respuesta del pedido no contiene sus identificadores.");
   }
 
-  const id = result.data.id;
-  if (typeof id !== "number" && typeof id !== "string") {
+  const data = result.data as { id?: unknown; orderNumber?: unknown };
+  if (
+    (typeof data.id !== "number" && typeof data.id !== "string") ||
+    typeof data.orderNumber !== "string" ||
+    !data.orderNumber
+  ) {
     throw new Error("La respuesta del pedido contiene un identificador inválido.");
   }
 
-  return String(id);
+  return { id: String(data.id), orderNumber: data.orderNumber };
 }
 
 export interface OrderItem {
@@ -45,6 +61,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string | number;
+  orderNumber?: string;
   orderId?: string | number;
   items: OrderItem[];
   status: string;
@@ -81,14 +98,14 @@ export async function getMyOrders(): Promise<Order[]> {
   return [];
 }
 
-// export async function markOrderAsPaidRequest(orderId: string): Promise<void> {
-//   const response = await fetch(apiUrl(`sales/orders/${orderId}/status`), {
-//     method: "PUT",
-//     headers: getAuthHeaders(),
-//     body: JSON.stringify({ status: "PAID" }),
-//   });
-//
-//   if (!response.ok) {
-//     throw new Error("El pedido se creó, pero no se pudo confirmar el pago.");
-//   }
-// }
+export async function markOrderAsPaidRequest(orderId: string): Promise<void> {
+  const response = await fetch(apiUrl(`sales/orders/${orderId}/status`), {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status: "PAID" }),
+  });
+
+  if (!response.ok) {
+    throw new Error("El pedido se creó, pero no se pudo confirmar el pago.");
+  }
+}
