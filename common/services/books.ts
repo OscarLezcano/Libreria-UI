@@ -2,6 +2,7 @@ import type { bookInputType } from "@/common/schemas/book/BookInputSchema";
 import { apiUrl, getAuthHeaders } from "@/common/services/http";
 
 export const BOOKS_PAGE_SIZE = 4;
+const WAREHOUSE_STOCK_PAGE_SIZE = 100;
 type CatalogResource = "authors" | "genres";
 
 export interface BookRecord {
@@ -20,6 +21,16 @@ export interface CatalogEntity {
 }
 
 interface StockRecord {
+  quantity: number;
+}
+
+interface WarehouseStockRecord {
+  bookId: number | null;
+  quantity: number | null;
+}
+
+export interface WarehouseBookStock {
+  bookId: number;
   quantity: number;
 }
 
@@ -147,6 +158,67 @@ export async function getBookStockQuantityRequest(
   }
 
   return result.data.quantity;
+}
+
+export async function getWarehouseBookStocksRequest(
+  warehouseId: number
+): Promise<WarehouseBookStock[]> {
+  const stocksByBookId = new Map<number, WarehouseBookStock>();
+  let page = 0;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const query = new URLSearchParams({
+      page: String(page),
+      size: String(WAREHOUSE_STOCK_PAGE_SIZE),
+    });
+    const response = await fetch(
+      apiUrl(`stock/stocks/warehouse/${warehouseId}?${query.toString()}`),
+      { headers: getAuthHeaders() }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        response.status === 401 || response.status === 403
+          ? "No tienes permisos para consultar el inventario."
+          : `No se pudo cargar el stock de la sucursal (HTTP ${response.status}).`
+      );
+    }
+
+    const result: ListResponse<WarehouseStockRecord> = await response.json();
+    if (!Array.isArray(result.data)) {
+      throw new Error("La API devolvió una lista de existencias inválida.");
+    }
+
+    for (const stock of result.data) {
+      if (
+        typeof stock.bookId !== "number" ||
+        !Number.isSafeInteger(stock.bookId) ||
+        stock.bookId <= 0 ||
+        typeof stock.quantity !== "number" ||
+        !Number.isSafeInteger(stock.quantity) ||
+        stock.quantity < 0
+      ) {
+        throw new Error("La API devolvió una existencia inválida.");
+      }
+
+      if (stock.quantity > 0) {
+        stocksByBookId.set(stock.bookId, {
+          bookId: stock.bookId,
+          quantity: stock.quantity,
+        });
+      }
+    }
+
+    const totalPages = result.pagination?.totalPages;
+    hasNextPage =
+      typeof totalPages === "number" && Number.isSafeInteger(totalPages)
+        ? page + 1 < totalPages
+        : result.data.length === WAREHOUSE_STOCK_PAGE_SIZE;
+    page += 1;
+  }
+
+  return [...stocksByBookId.values()];
 }
 
 export async function getAuthorByIdRequest(

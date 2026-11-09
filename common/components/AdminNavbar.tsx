@@ -7,6 +7,7 @@ const ADMIN_MENU = [
   { label: "Inicio", href: "/" },
   { label: "Catálogo", href: "/admin/libros" },
   { label: "Inventario", href: "/admin/inventario" },
+  { label: "Sucursales", href: "/admin/sucursales" },
   { label: "Compras", href: "/admin/compras" },
   { label: "Proveedores", href: "/admin/proveedores" },
 ] as const;
@@ -17,6 +18,8 @@ export default function AdminNavbar() {
     ? "Catálogo"
     : pathname.startsWith("/admin/inventario")
       ? "Inventario"
+      : pathname.startsWith("/admin/sucursales")
+        ? "Sucursales"
       : pathname.startsWith("/admin/proveedores")
         ? "Proveedores"
         : "Compras";
