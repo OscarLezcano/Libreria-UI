@@ -155,7 +155,7 @@ export default function NewStockAdjustmentPage() {
         }),
         queryClient.invalidateQueries({ queryKey: ["stocks", "warehouse"] }),
       ]);
-      router.push("/admin/inventario");
+      router.push("/vendedor/inventario");
     },
     onError: (error) => {
       setFormError(
@@ -281,7 +281,7 @@ export default function NewStockAdjustmentPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/admin/inventario" className="btn btn-ghost">
+          <Link href="/vendedor/inventario" className="btn btn-ghost">
             Cancelar
           </Link>
           <button

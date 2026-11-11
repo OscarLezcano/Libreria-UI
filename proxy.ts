@@ -20,5 +20,6 @@ export const config = {
     "/pago/:path*",
     "/mis-compras/:path*",
     "/admin/:path*",
+    "/vendedor/:path*",
   ],
 };

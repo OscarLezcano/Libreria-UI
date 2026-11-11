@@ -123,7 +123,7 @@ export default function AdminInventoryPage() {
             </p>
           </div>
           {warehouseLoaded && warehouseId !== null ? (
-            <Link href="/admin/inventario/nuevo" className="btn btn-primary">
+            <Link href="/vendedor/inventario/nuevo" className="btn btn-primary">
               <Plus className="size-4" strokeWidth={2.5} />
               Nuevo Ajuste
             </Link>

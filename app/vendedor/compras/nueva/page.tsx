@@ -205,7 +205,7 @@ function NuevaCompraContent() {
     mutationFn: createPurchaseRequest,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["purchases"] });
-      router.push("/admin/compras");
+      router.push("/vendedor/compras");
     },
     onError: (error) => {
       setFormError(
@@ -357,7 +357,7 @@ function NuevaCompraContent() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/admin/compras" className="btn btn-ghost">
+          <Link href="/vendedor/compras" className="btn btn-ghost">
             Cancelar
           </Link>
           <button
@@ -509,7 +509,7 @@ function NuevaCompraContent() {
                       </div>
                       {!isViewingPurchase && (
                         <Link
-                          href="/admin/proveedores"
+                          href="/vendedor/proveedores"
                           className="btn btn-square"
                           title="Agregar proveedor"
                           aria-label="Agregar proveedor"

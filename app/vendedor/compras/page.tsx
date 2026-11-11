@@ -179,7 +179,7 @@ export default function AdminComprasPage() {
               Historial de órdenes de compra a proveedores
             </p>
           </div>
-          <Link href="/admin/compras/nueva" className="btn btn-primary">
+          <Link href="/vendedor/compras/nueva" className="btn btn-primary">
             <Plus className="size-4" strokeWidth={2.5} />
             Nueva Compra
           </Link>
@@ -282,13 +282,13 @@ export default function AdminComprasPage() {
                             className="cursor-pointer hover:bg-base-200"
                             onClick={() =>
                               router.push(
-                                `/admin/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`
+                                `/vendedor/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`
                               )
                             }
                           >
                             <td className="font-semibold">
                               <Link
-                                href={`/admin/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`}
+                                href={`/vendedor/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`}
                                 className="link link-hover"
                                 onClick={(event) => event.stopPropagation()}
                               >
