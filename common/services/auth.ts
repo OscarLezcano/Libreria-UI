@@ -9,6 +9,7 @@ export interface AuthenticatedUser {
   name?: string | null;
   lastName?: string | null;
   email?: string | null;
+  roleNames?: string[] | null;
 }
 
 export function getAuthenticatedWarehouseId(): number | null {

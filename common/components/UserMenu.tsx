@@ -13,14 +13,10 @@ function getShowAdminLink() {
     const user: unknown = JSON.parse(storedUser);
     if (!user || typeof user !== "object") return false;
 
-    const { roleName, roleId } = user as {
-      roleName?: unknown;
-      roleId?: unknown;
+    const { roleNames } = user as {
+      roleNames?: unknown;
     };
-    return (
-      roleName === "ADMIN" ||
-      ((roleName === undefined || roleName === null) && roleId === 1)
-    );
+    return Array.isArray(roleNames) && roleNames.includes("ADMIN");
   } catch {
     return false;
   }
