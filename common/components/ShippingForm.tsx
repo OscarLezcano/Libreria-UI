@@ -152,6 +152,9 @@ export default function ShippingForm({
             type="tel"
             className="input w-full"
             required
+            inputMode="tel"
+            pattern="(?:09[0-9]{8}|\+595[\s.-]?9[0-9]{8})"
+            title="Usá 0999999999 o +595 999999999"
             placeholder="+595 9xx xxx xxx"
             value={data.telefono}
             onChange={(e) => update("telefono", e.target.value)}

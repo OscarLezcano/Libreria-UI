@@ -6,11 +6,17 @@ export interface CreateOrderInput {
   invoiceName: string;
   invoiceLastName: string;
   invoiceRuc: string;
+  invoicePhone: string;
 }
 
 export interface CreatedOrder {
   id: string;
   orderNumber: string;
+}
+
+export interface PaidOrder {
+  orderNumber: string;
+  invoiceNumber: string;
 }
 
 export async function createOrderRequest(
@@ -75,7 +81,7 @@ export interface Order {
 }
 
 export async function getMyOrders(): Promise<Order[]> {
-  const response = await fetch(apiUrl("sales/orders"), {
+  const response = await fetch(apiUrl("sales/orders/mine"), {
     method: "GET",
     headers: getAuthHeaders(),
     credentials: "include",
@@ -91,6 +97,10 @@ export async function getMyOrders(): Promise<Order[]> {
   if (result && typeof result === "object") {
     const obj = result as Record<string, unknown>;
     if (Array.isArray(obj.data)) return obj.data as Order[];
+    if (obj.data && typeof obj.data === "object") {
+      const page = obj.data as Record<string, unknown>;
+      if (Array.isArray(page.content)) return page.content as Order[];
+    }
     if (Array.isArray(obj.orders)) return obj.orders as Order[];
     if (Array.isArray(obj.items)) return obj.items as Order[];
     if (Array.isArray(obj.content)) return obj.content as Order[];
@@ -99,7 +109,7 @@ export async function getMyOrders(): Promise<Order[]> {
   return [];
 }
 
-export async function markOrderAsPaidRequest(orderId: string): Promise<void> {
+export async function markOrderAsPaidRequest(orderId: string): Promise<PaidOrder> {
   const response = await fetch(apiUrl(`sales/orders/${orderId}/status`), {
     method: "PATCH",
     headers: getAuthHeaders(),
@@ -109,4 +119,13 @@ export async function markOrderAsPaidRequest(orderId: string): Promise<void> {
   if (!response.ok) {
     throw new Error("El pedido se creó, pero no se pudo confirmar el pago.");
   }
+  const result: { data?: unknown } = await response.json();
+  if (!result.data || typeof result.data !== "object") {
+    throw new Error("El pago fue confirmado, pero la factura no fue devuelta.");
+  }
+  const data = result.data as Record<string, unknown>;
+  if (typeof data.orderNumber !== "string" || typeof data.invoiceNumber !== "string") {
+    throw new Error("La respuesta de pago no contiene los datos de factura.");
+  }
+  return { orderNumber: data.orderNumber, invoiceNumber: data.invoiceNumber };
 }

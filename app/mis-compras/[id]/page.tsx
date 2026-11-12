@@ -68,7 +68,9 @@ export default function MisCompraDetallePage() {
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-10 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold">Detalle del pedido #{id}</h1>
+            <h1 className="text-2xl font-extrabold">
+              Detalle del pedido #{order?.orderNumber || id}
+            </h1>
             <p className="text-base-content/60 mt-1 text-sm">
               {loading ? "\u00A0" : `Fecha: ${date}`}
             </p>
@@ -95,6 +97,11 @@ export default function MisCompraDetallePage() {
                 <div className="text-right">
                   <div className="text-base-content/60 text-sm">Total</div>
                   <div className="text-lg font-extrabold">{formatGs(Number(total))}</div>
+                  {order?.invoiceNumber && (
+                    <div className="text-base-content/60 mt-1 text-xs">
+                      Factura: <b className="text-base-content">{order.invoiceNumber}</b>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

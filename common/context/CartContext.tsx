@@ -57,7 +57,27 @@ function normalizeState(parsed: unknown): CartState {
   }
   if (parsed && Array.isArray((parsed as CartState).items)) {
     const state = parsed as CartState;
-    return { ...state, shipping: state.shipping ?? null };
+    const items = state.items
+      .filter((item) => item && typeof item.bookId === "string")
+      .map((item) => ({
+        bookId: item.bookId.trim(),
+        quantity: Number.isSafeInteger(item.quantity) && item.quantity > 0
+          ? item.quantity
+          : 1,
+      }))
+      .filter((item) => item.bookId.length > 0);
+    const shipping = state.shipping
+      ? {
+          nombre: state.shipping.nombre?.trim() ?? "",
+          apellido: state.shipping.apellido?.trim() ?? "",
+          ruc: state.shipping.ruc?.trim() ?? "",
+          departamento: state.shipping.departamento?.trim() ?? "",
+          ciudad: state.shipping.ciudad?.trim() ?? "",
+          direccion: state.shipping.direccion?.trim() ?? "",
+          telefono: state.shipping.telefono?.trim() ?? "",
+        }
+      : null;
+    return { items, coupon: state.coupon?.trim().toUpperCase() ?? null, shipping };
   }
   return EMPTY_STATE;
 }
@@ -144,7 +164,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const setShipping = useCallback(
     (next: ShippingData | null) =>
-      writeState({ ...readSnapshot(), shipping: next }),
+      writeState({
+        ...readSnapshot(),
+        shipping: next
+          ? {
+              ...next,
+              nombre: next.nombre.trim(),
+              apellido: next.apellido.trim(),
+              ruc: next.ruc.trim().toUpperCase(),
+              departamento: next.departamento.trim(),
+              ciudad: next.ciudad.trim(),
+              direccion: next.direccion.trim(),
+              telefono: next.telefono.trim(),
+            }
+          : null,
+      }),
     []
   );
 

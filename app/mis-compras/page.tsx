@@ -124,7 +124,7 @@ export default function MisComprasPage() {
                         className="cursor-pointer hover:bg-base-200"
                         onClick={() => router.push(`/mis-compras/${order.id}`)}
                       >
-                        <td className="font-semibold">#{order.id}</td>
+                        <td className="font-semibold">#{order.orderNumber || order.id}</td>
                         <td>{date}</td>
                         <td>
                           <span className="text-base-content/70 text-xs">
