@@ -114,9 +114,11 @@ export default function MisComprasPage() {
                     const dateRaw = order.createdAt || order.created_at || order.date;
                     const date = dateRaw ? new Date(dateRaw).toLocaleDateString("es-PY") : "-";
                     const total = order.totalPrice ?? order.total ?? order.subtotal ?? 0;
-                    const units = Array.isArray(items)
+                    const orderDetailIds = Array.isArray(order.orderDetailIds) ? order.orderDetailIds : [];
+                    const productCount = items.length || orderDetailIds.length;
+                    const units = items.length > 0
                       ? items.reduce((acc, item) => acc + Number(item.quantity || 0), 0)
-                      : 0;
+                      : orderDetailIds.length;
 
                     return (
                       <tr
@@ -132,7 +134,7 @@ export default function MisComprasPage() {
                         <td>{date}</td>
                         <td>
                           <span className="text-base-content/70 text-xs">
-                            {items.length} producto{items.length !== 1 ? "s" : ""} · {units} unidad{units !== 1 ? "es" : ""}
+                            {productCount} producto{productCount !== 1 ? "s" : ""} · {units} unidad{units !== 1 ? "es" : ""}
                           </span>
                         </td>
                         <td className="text-right font-semibold">{formatGs(Number(total))}</td>

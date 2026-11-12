@@ -4,7 +4,7 @@ import HomeFooter from "@/common/components/HomeFooter";
 import LoadingSpinner from "@/common/components/LoadingSpinner";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { getBook } from "@/common/data/books";
-import { getMyOrders, type Order } from "@/common/services/sales";
+import { getMyOrders, getOrderDetailsRequest, type Order, type OrderDetail } from "@/common/services/sales";
 import { formatGs } from "@/common/utils/format";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,7 @@ export default function MisCompraDetallePage({ id }: { id: string }) {
   const router = useRouter();
 
   const [order, setOrder] = useState<Order | null>(null);
+  const [details, setDetails] = useState<OrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +42,9 @@ export default function MisCompraDetallePage({ id }: { id: string }) {
         const list = Array.isArray(data) ? data : [];
         const found = list.find((item) => String(item.id) === id);
         if (!found) throw new Error("Pedido no encontrado");
+        const orderDetails = await getOrderDetailsRequest(id);
         if (!cancelled) setOrder(found);
+        if (!cancelled) setDetails(orderDetails);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Error al cargar detalle");
       } finally {
@@ -53,7 +56,9 @@ export default function MisCompraDetallePage({ id }: { id: string }) {
     };
   }, [id]);
 
-  const items = order?.orderDetails || order?.order_details || order?.items || [];
+  const items = details.length > 0
+    ? details
+    : order?.orderDetails || order?.order_details || order?.items || [];
   const meta = getMeta(order?.status ?? "");
   const dateRaw = order?.createdAt || order?.created_at || order?.date;
   const date = dateRaw ? new Date(dateRaw).toLocaleDateString("es-PY") : "-";
