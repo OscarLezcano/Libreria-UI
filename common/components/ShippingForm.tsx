@@ -16,6 +16,7 @@ interface ShippingFormProps {
 const EMPTY_DATA: ShippingData = {
   nombre: "",
   apellido: "",
+  ruc: "",
   departamento: "",
   ciudad: "",
   direccion: "",
@@ -76,6 +77,19 @@ export default function ShippingForm({
             />
           </fieldset>
         </div>
+
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">RUC personal</legend>
+          <input
+            type="text"
+            className="input w-full"
+            required
+            inputMode="numeric"
+            placeholder="Ej.: 1234567-8"
+            value={data.ruc}
+            onChange={(e) => update("ruc", e.target.value)}
+          />
+        </fieldset>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <fieldset className="fieldset">

@@ -17,6 +17,7 @@ export interface CartItem {
 export interface ShippingData {
   nombre: string;
   apellido: string;
+  ruc: string;
   departamento: string;
   ciudad: string;
   direccion: string;
