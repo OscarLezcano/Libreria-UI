@@ -66,6 +66,13 @@ export interface OrderItem {
   };
 }
 
+export interface OrderDetail extends OrderItem {
+  id?: number | string;
+  bookName?: string;
+  unitPrice?: number;
+  discount?: number;
+}
+
 export interface Order {
   id: string | number;
   orderNumber?: string;
@@ -107,6 +114,26 @@ export async function getMyOrders(): Promise<Order[]> {
     if (Array.isArray(obj.results)) return obj.results as Order[];
   }
   return [];
+}
+
+export async function getOrderDetailsRequest(
+  orderId: string | number
+): Promise<OrderDetail[]> {
+  const response = await fetch(apiUrl(`sales/orders/${orderId}/details`), {
+    method: "GET",
+    headers: getAuthHeaders(),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("No se pudo cargar el detalle del pedido");
+  }
+
+  const result: { data?: unknown } = await response.json();
+  if (!Array.isArray(result.data)) {
+    throw new Error("La respuesta del detalle del pedido no es válida");
+  }
+  return result.data as OrderDetail[];
 }
 
 export async function markOrderAsPaidRequest(orderId: string): Promise<PaidOrder> {
