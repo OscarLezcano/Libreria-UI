@@ -5,6 +5,7 @@ export interface CreateOrderInput {
   couponCode?: string;
   invoiceName: string;
   invoiceLastName: string;
+  invoiceRuc: string;
 }
 
 export interface CreatedOrder {
@@ -100,7 +101,7 @@ export async function getMyOrders(): Promise<Order[]> {
 
 export async function markOrderAsPaidRequest(orderId: string): Promise<void> {
   const response = await fetch(apiUrl(`sales/orders/${orderId}/status`), {
-    method: "PUT",
+    method: "PATCH",
     headers: getAuthHeaders(),
     body: JSON.stringify({ status: "PAID" }),
   });

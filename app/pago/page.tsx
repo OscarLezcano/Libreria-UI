@@ -66,6 +66,7 @@ export default function PagoPage() {
           })),
           invoiceName: shipping?.nombre ?? "",
           invoiceLastName: shipping?.apellido ?? "",
+          invoiceRuc: shipping?.ruc ?? "",
           ...(coupon ? { couponCode: coupon } : {}),
         });
         setCreatedOrder(order);
