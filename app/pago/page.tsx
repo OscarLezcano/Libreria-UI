@@ -22,6 +22,7 @@ const formatGs = (value: number) =>
 
 interface PaidData {
   orderNumber: string;
+  invoiceNumber: string;
 }
 
 export default function PagoPage() {
@@ -67,13 +68,14 @@ export default function PagoPage() {
           invoiceName: shipping?.nombre ?? "",
           invoiceLastName: shipping?.apellido ?? "",
           invoiceRuc: shipping?.ruc ?? "",
+          invoicePhone: shipping?.telefono ?? "",
           ...(coupon ? { couponCode: coupon } : {}),
         });
         setCreatedOrder(order);
       }
 
-      await markOrderAsPaidRequest(order.id);
-      setPaid({ orderNumber: order.orderNumber });
+      const paidOrder = await markOrderAsPaidRequest(order.id);
+      setPaid(paidOrder);
       clear();
       setShowToast(true);
       window.setTimeout(() => setShowToast(false), 5000);
@@ -104,6 +106,9 @@ export default function PagoPage() {
                 </h2>
                 <p className="text-base-content/60 mt-2 text-sm">
                   N° de pedido: <b className="text-base-content">{paid.orderNumber}</b>
+                </p>
+                <p className="text-base-content/60 mt-1 text-sm">
+                  N° de factura: <b className="text-base-content">{paid.invoiceNumber}</b>
                 </p>
                 <div className="card-actions mt-4 flex-col justify-center gap-2">
                   <Link href="/explorar" className="btn btn-primary w-full">

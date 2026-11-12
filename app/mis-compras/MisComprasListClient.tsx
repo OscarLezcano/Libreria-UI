@@ -128,7 +128,7 @@ export default function MisComprasPage() {
                           )
                         }
                       >
-                        <td className="font-semibold">#{order.id}</td>
+                        <td className="font-semibold">#{order.orderNumber || order.id}</td>
                         <td>{date}</td>
                         <td>
                           <span className="text-base-content/70 text-xs">
