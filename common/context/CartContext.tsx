@@ -53,7 +53,7 @@ let cachedState: CartState = EMPTY_STATE;
 
 function normalizeState(parsed: unknown): CartState {
   if (Array.isArray(parsed)) {
-    return { items: parsed, coupon: null, shipping: null }; // formato v1
+    return normalizeState({ items: parsed, coupon: null, shipping: null }); // formato v1
   }
   if (parsed && Array.isArray((parsed as CartState).items)) {
     const state = parsed as CartState;
