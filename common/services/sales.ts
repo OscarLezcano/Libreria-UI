@@ -85,6 +85,7 @@ export interface Order {
   items?: OrderItem[];
   orderDetails?: OrderItem[];
   order_details?: OrderItem[];
+  orderDetailIds?: Array<string | number>;
   status: string;
   createdAt?: string;
   created_at?: string;
