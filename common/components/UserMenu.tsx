@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { LayoutDashboard, LogOut, User } from "lucide-react";
+import { LayoutDashboard, LogOut, Store, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -13,14 +13,10 @@ function getShowAdminLink() {
     const user: unknown = JSON.parse(storedUser);
     if (!user || typeof user !== "object") return false;
 
-    const { roleName, roleId } = user as {
-      roleName?: unknown;
-      roleId?: unknown;
+    const { roleNames } = user as {
+      roleNames?: unknown;
     };
-    return (
-      roleName === "ADMIN" ||
-      ((roleName === undefined || roleName === null) && roleId === 1)
-    );
+    return Array.isArray(roleNames) && roleNames.includes("ADMIN");
   } catch {
     return false;
   }
@@ -60,12 +56,18 @@ export default function UserMenu() {
       <ul className="menu dropdown-content z-50 mt-2 w-40 rounded-box bg-base-100 p-2 shadow-[0_0_16px_rgba(0,0,0,0.16)]">
         {showAdminLink && (
           <li>
-            <Link href="/admin/libros">
+            <Link href="/admin/sucursales">
               <LayoutDashboard className="size-4" strokeWidth={2} />
               Panel Admin
             </Link>
           </li>
         )}
+        <li>
+          <Link href="/vendedor/libros">
+            <Store className="size-4" strokeWidth={2} />
+            Panel Vendedor
+          </Link>
+        </li>
         <li>
           <button type="button" onClick={logout} className="text-error">
             <LogOut className="size-4 text-error" strokeWidth={2} />

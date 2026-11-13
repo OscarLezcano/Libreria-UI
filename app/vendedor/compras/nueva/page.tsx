@@ -23,7 +23,8 @@ import {
   searchSuppliersRequest,
   type SupplierRecord,
 } from "@/common/services/suppliers";
-import { getAuthenticatedWarehouseId } from "@/common/services/auth";
+import { useWarehouseScope } from "@/common/hooks/useWarehouseScope";
+import { withWarehouseContext } from "@/common/utils/warehouseScope";
 import {
   useInfiniteQuery,
   useMutation,
@@ -53,6 +54,12 @@ function NuevaCompraContent() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const {
+    warehouseId,
+    warehouseLoaded,
+    isInvalidWarehouseOverride,
+    warehouseParam,
+  } = useWarehouseScope();
   const purchaseId = searchParams.get("purchaseId");
   const isViewingPurchase = purchaseId !== null;
   const isValidPurchaseId = purchaseId !== null && /^\d+$/.test(purchaseId);
@@ -205,7 +212,7 @@ function NuevaCompraContent() {
     mutationFn: createPurchaseRequest,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["purchases"] });
-      router.push("/admin/compras");
+      router.push(withWarehouseContext("/vendedor/compras", warehouseParam));
     },
     onError: (error) => {
       setFormError(
@@ -318,9 +325,12 @@ function NuevaCompraContent() {
       return;
     }
 
-    const warehouseId = getAuthenticatedWarehouseId();
     if (warehouseId === null) {
-      setFormError("Tu usuario no tiene un almacén asignado.");
+      setFormError(
+        isInvalidWarehouseOverride
+          ? "El identificador de la sucursal no es válido."
+          : "Tu usuario no tiene un almacén asignado."
+      );
       return;
     }
 
@@ -357,7 +367,10 @@ function NuevaCompraContent() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/admin/compras" className="btn btn-ghost">
+          <Link
+            href={withWarehouseContext("/vendedor/compras", warehouseParam)}
+            className="btn btn-ghost"
+          >
             Cancelar
           </Link>
           <button
@@ -366,6 +379,8 @@ function NuevaCompraContent() {
             className="btn btn-neutral"
             disabled={
               isViewingPurchase ||
+              !warehouseLoaded ||
+              warehouseId === null ||
               createMutation.isPending ||
               draftItems.length === 0
             }
@@ -385,6 +400,17 @@ function NuevaCompraContent() {
           message={formError}
           placement="toast"
           onClose={() => setFormError(null)}
+        />
+      )}
+      {warehouseLoaded && warehouseId === null && !isViewingPurchase && (
+        <NotificationToast
+          type="error"
+          message={
+            isInvalidWarehouseOverride
+              ? "El identificador de la sucursal no es válido."
+              : "Tu usuario no tiene un almacén asignado."
+          }
+          className="my-6 w-full"
         />
       )}
       {isViewingPurchase && !isValidPurchaseId ? (
@@ -509,7 +535,10 @@ function NuevaCompraContent() {
                       </div>
                       {!isViewingPurchase && (
                         <Link
-                          href="/admin/proveedores"
+                          href={withWarehouseContext(
+                            "/vendedor/proveedores",
+                            warehouseParam
+                          )}
                           className="btn btn-square"
                           title="Agregar proveedor"
                           aria-label="Agregar proveedor"

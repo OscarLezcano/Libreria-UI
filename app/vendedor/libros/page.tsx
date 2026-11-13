@@ -7,6 +7,7 @@ import Pagination from "@/common/components/Pagination";
 import type { bookInputType } from "@/common/schemas/book/BookInputSchema";
 import { useAuthorsByIds } from "@/common/hooks/useAuthorsByIds";
 import { useGenresByIds } from "@/common/hooks/useGenresByIds";
+import { useWarehouseScope } from "@/common/hooks/useWarehouseScope";
 import {
   BOOKS_PAGE_SIZE,
   createBookRequest,
@@ -16,27 +17,13 @@ import {
   updateBookRequest,
   type BookRecord,
 } from "@/common/services/books";
-import { getAuthenticatedWarehouseId } from "@/common/services/auth";
 import { formatGs } from "@/common/utils/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState } from "react";
 
 type AdminBook = bookInputType & { id: string };
 const EMPTY_BOOKS: BookRecord[] = [];
-
-function subscribeToUserStorage(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-}
-
-function getWarehouseSnapshot() {
-  return getAuthenticatedWarehouseId() ?? 0;
-}
-
-function getServerWarehouseSnapshot() {
-  return -1;
-}
 
 function toAdminBook(
   book: BookRecord,
@@ -64,13 +51,11 @@ function toAdminBook(
 
 export default function AdminLibrosPage() {
   const queryClient = useQueryClient();
-  const warehouseSnapshot = useSyncExternalStore(
-    subscribeToUserStorage,
-    getWarehouseSnapshot,
-    getServerWarehouseSnapshot
-  );
-  const warehouseLoaded = warehouseSnapshot !== -1;
-  const warehouseId = warehouseSnapshot > 0 ? warehouseSnapshot : null;
+  const {
+    warehouseId,
+    warehouseLoaded,
+    isInvalidWarehouseOverride,
+  } = useWarehouseScope();
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const booksQuery = useQuery({
@@ -345,7 +330,9 @@ export default function AdminLibrosPage() {
                 </div>
                 {warehouseLoaded && warehouseId === null && (
                   <div className="alert alert-warning mt-3 text-sm" role="alert">
-                    Tu usuario no tiene un almacén asignado; no se pueden consultar las existencias.
+                    {isInvalidWarehouseOverride
+                      ? "El identificador de la sucursal no es válido."
+                      : "Tu usuario no tiene un almacén asignado; no se pueden consultar las existencias."}
                   </div>
                 )}
                 {stocksQuery.isError && (

@@ -9,13 +9,14 @@ import {
   type PurchaseStatus,
 } from "@/common/data/suppliers";
 import { useSuppliersByIds } from "@/common/hooks/useSuppliersByIds";
-import { getAuthenticatedWarehouseId } from "@/common/services/auth";
+import { useWarehouseScope } from "@/common/hooks/useWarehouseScope";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getPurchasesRequest,
   updatePurchaseStatusRequest,
 } from "@/common/services/purchases";
 import { formatGs } from "@/common/utils/format";
+import { withWarehouseContext } from "@/common/utils/warehouseScope";
 import { Ban, Check, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,23 +24,9 @@ import {
   type FormEvent,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 
 const PAGE_SIZE = 5;
-
-function subscribeToUserStorage(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-}
-
-function getWarehouseSnapshot() {
-  return getAuthenticatedWarehouseId() ?? 0;
-}
-
-function getServerWarehouseSnapshot() {
-  return -1;
-}
 
 function formatPurchaseDate(value: string | null): string {
   if (!value) return "—";
@@ -52,13 +39,12 @@ function formatPurchaseDate(value: string | null): string {
 export default function AdminComprasPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const warehouseSnapshot = useSyncExternalStore(
-    subscribeToUserStorage,
-    getWarehouseSnapshot,
-    getServerWarehouseSnapshot
-  );
-  const warehouseLoaded = warehouseSnapshot !== -1;
-  const warehouseId = warehouseSnapshot > 0 ? warehouseSnapshot : null;
+  const {
+    warehouseId,
+    warehouseLoaded,
+    isInvalidWarehouseOverride,
+    warehouseParam,
+  } = useWarehouseScope();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | PurchaseStatus>(
     "ALL"
@@ -179,7 +165,13 @@ export default function AdminComprasPage() {
               Historial de órdenes de compra a proveedores
             </p>
           </div>
-          <Link href="/admin/compras/nueva" className="btn btn-primary">
+          <Link
+            href={withWarehouseContext(
+              "/vendedor/compras/nueva",
+              warehouseParam
+            )}
+            className="btn btn-primary"
+          >
             <Plus className="size-4" strokeWidth={2.5} />
             Nueva Compra
           </Link>
@@ -239,7 +231,11 @@ export default function AdminComprasPage() {
             ) : warehouseId === null ? (
               <NotificationToast
                 type="error"
-                message="Tu usuario no tiene un almacén asignado."
+                message={
+                  isInvalidWarehouseOverride
+                    ? "El identificador de la sucursal no es válido."
+                    : "Tu usuario no tiene un almacén asignado."
+                }
                 placement="toast"
               />
             ) : purchasesQuery.isError ? (
@@ -282,13 +278,19 @@ export default function AdminComprasPage() {
                             className="cursor-pointer hover:bg-base-200"
                             onClick={() =>
                               router.push(
-                                `/admin/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`
+                                withWarehouseContext(
+                                  `/vendedor/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`,
+                                  warehouseParam
+                                )
                               )
                             }
                           >
                             <td className="font-semibold">
                               <Link
-                                href={`/admin/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`}
+                                href={withWarehouseContext(
+                                  `/vendedor/compras/nueva?purchaseId=${encodeURIComponent(purchase.id)}`,
+                                  warehouseParam
+                                )}
                                 className="link link-hover"
                                 onClick={(event) => event.stopPropagation()}
                               >
