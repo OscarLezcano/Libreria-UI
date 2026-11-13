@@ -32,6 +32,7 @@ export default function MisComprasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -51,9 +52,20 @@ export default function MisComprasPage() {
     };
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE));
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredOrders = normalizedQuery
+    ? orders.filter((order) =>
+        [order.orderNumber, order.invoiceNumber]
+          .filter((value): value is string => typeof value === "string")
+          .some((value) => value.toLowerCase().includes(normalizedQuery))
+      )
+    : orders;
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const visible = orders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const visible = filteredOrders.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   return (
     <main className="bg-base-100 flex min-h-dvh flex-col">
@@ -71,6 +83,34 @@ export default function MisComprasPage() {
               <h2 className="text-sm font-bold uppercase tracking-wider text-base-content/60">
                 Mis pedidos
               </h2>
+            </div>
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <label className="input input-bordered flex w-full max-w-md items-center gap-2">
+                <span className="text-base-content/50 text-sm">Buscar</span>
+                <input
+                  type="search"
+                  className="grow"
+                  value={query}
+                  placeholder="Pedido o factura"
+                  aria-label="Buscar pedido o factura"
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setPage(1);
+                  }}
+                />
+              </label>
+              {query && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm self-start sm:self-auto"
+                  onClick={() => {
+                    setQuery("");
+                    setPage(1);
+                  }}
+                >
+                  Limpiar
+                </button>
+              )}
             </div>
 
             <div className="overflow-x-auto flex-1">
@@ -104,7 +144,9 @@ export default function MisComprasPage() {
                   {!loading && !error && visible.length === 0 && (
                     <tr>
                       <td colSpan={5} className="text-base-content/60 py-8 text-center text-sm">
-                        Aún no tenés compras.
+                        {normalizedQuery
+                          ? "No se encontró ningún pedido o factura."
+                          : "Aún no tenés compras."}
                       </td>
                     </tr>
                   )}
