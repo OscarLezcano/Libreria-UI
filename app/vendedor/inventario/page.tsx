@@ -3,7 +3,8 @@
 import LoadingSpinner from "@/common/components/LoadingSpinner";
 import NotificationToast from "@/common/components/NotificationToast";
 import Pagination from "@/common/components/Pagination";
-import { getAuthenticatedWarehouseId } from "@/common/services/auth";
+import { useWarehouseScope } from "@/common/hooks/useWarehouseScope";
+import { withWarehouseContext } from "@/common/utils/warehouseScope";
 import {
   getStockAdjustmentDetailsRequest,
   getStockAdjustmentsPageRequest,
@@ -13,20 +14,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState, useSyncExternalStore } from "react";
-
-function subscribeToUserStorage(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-}
-
-function getWarehouseSnapshot() {
-  return getAuthenticatedWarehouseId() ?? 0;
-}
-
-function getServerWarehouseSnapshot() {
-  return -1;
-}
+import { useRef, useState } from "react";
 
 function formatDate(value: string | null): string {
   if (!value) return "—";
@@ -67,13 +55,12 @@ function DifferenceBadge({ difference }: { difference: number }) {
 
 export default function AdminInventoryPage() {
   const detailsDialogRef = useRef<HTMLDialogElement>(null);
-  const warehouseSnapshot = useSyncExternalStore(
-    subscribeToUserStorage,
-    getWarehouseSnapshot,
-    getServerWarehouseSnapshot
-  );
-  const warehouseLoaded = warehouseSnapshot !== -1;
-  const warehouseId = warehouseSnapshot > 0 ? warehouseSnapshot : null;
+  const {
+    warehouseId,
+    warehouseLoaded,
+    isInvalidWarehouseOverride,
+    warehouseParam,
+  } = useWarehouseScope();
   const [page, setPage] = useState(1);
   const [selectedAdjustment, setSelectedAdjustment] =
     useState<StockAdjustmentRecord | null>(null);
@@ -123,7 +110,13 @@ export default function AdminInventoryPage() {
             </p>
           </div>
           {warehouseLoaded && warehouseId !== null ? (
-            <Link href="/vendedor/inventario/nuevo" className="btn btn-primary">
+            <Link
+              href={withWarehouseContext(
+                "/vendedor/inventario/nuevo",
+                warehouseParam
+              )}
+              className="btn btn-primary"
+            >
               <Plus className="size-4" strokeWidth={2.5} />
               Nuevo Ajuste
             </Link>
@@ -148,7 +141,11 @@ export default function AdminInventoryPage() {
             ) : warehouseId === null ? (
               <NotificationToast
                 type="error"
-                message="Tu usuario no tiene un almacén asignado."
+                message={
+                  isInvalidWarehouseOverride
+                    ? "El identificador de la sucursal no es válido."
+                    : "Tu usuario no tiene un almacén asignado."
+                }
                 placement="toast"
               />
             ) : adjustmentsQuery.isPending ? (

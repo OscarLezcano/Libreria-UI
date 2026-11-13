@@ -1,4 +1,5 @@
 import SellerNavbar from "@/common/components/SellerNavbar";
+import { Suspense } from "react";
 
 export default function SellerLayout({
   children,
@@ -7,8 +8,10 @@ export default function SellerLayout({
 }) {
   return (
     <div className="bg-base-200 min-h-dvh">
-      <SellerNavbar />
-      {children}
+      <Suspense fallback={null}>
+        <SellerNavbar />
+      </Suspense>
+      <Suspense fallback={null}>{children}</Suspense>
     </div>
   );
 }

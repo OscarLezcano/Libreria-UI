@@ -22,11 +22,13 @@ export default function SiteNavbar({ items, active }: SiteNavbarProps) {
   const { count } = useCart();
   const activeKey =
     active ??
-    items.find(
-      (item) =>
-        pathname === item.href ||
-        (item.href !== "/" && pathname.startsWith(`${item.href}/`))
-    )?.key;
+    items.find((item) => {
+      const hrefPath = item.href.split("?", 1)[0];
+      return (
+        pathname === hrefPath ||
+        (hrefPath !== "/" && pathname.startsWith(`${hrefPath}/`))
+      );
+    })?.key;
 
   return (
     <header className="border-b border-base-300 bg-base-100">

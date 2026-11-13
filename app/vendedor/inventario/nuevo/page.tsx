@@ -11,7 +11,8 @@ import {
   getBooksPageRequest,
   type BookRecord,
 } from "@/common/services/books";
-import { getAuthenticatedWarehouseId } from "@/common/services/auth";
+import { useWarehouseScope } from "@/common/hooks/useWarehouseScope";
+import { withWarehouseContext } from "@/common/utils/warehouseScope";
 import { createStockAdjustmentRequest } from "@/common/services/stockAdjustments";
 import {
   useInfiniteQuery,
@@ -21,7 +22,7 @@ import {
 } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useState, useSyncExternalStore } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 function toPurchaseBooks(records: BookRecord[]): PurchaseBook[] {
   return records.flatMap((book) =>
@@ -37,29 +38,15 @@ function toPurchaseBooks(records: BookRecord[]): PurchaseBook[] {
   );
 }
 
-function subscribeToUserStorage(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-}
-
-function getWarehouseSnapshot() {
-  return getAuthenticatedWarehouseId() ?? 0;
-}
-
-function getServerWarehouseSnapshot() {
-  return -1;
-}
-
 export default function NewStockAdjustmentPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const warehouseSnapshot = useSyncExternalStore(
-    subscribeToUserStorage,
-    getWarehouseSnapshot,
-    getServerWarehouseSnapshot
-  );
-  const warehouseLoaded = warehouseSnapshot !== -1;
-  const warehouseId = warehouseSnapshot > 0 ? warehouseSnapshot : null;
+  const {
+    warehouseId,
+    warehouseLoaded,
+    isInvalidWarehouseOverride,
+    warehouseParam,
+  } = useWarehouseScope();
   const [note, setNote] = useState("");
   const [bookSearch, setBookSearch] = useState("");
   const [bookSearchTerm, setBookSearchTerm] = useState("");
@@ -155,7 +142,9 @@ export default function NewStockAdjustmentPage() {
         }),
         queryClient.invalidateQueries({ queryKey: ["stocks", "warehouse"] }),
       ]);
-      router.push("/vendedor/inventario");
+      router.push(
+        withWarehouseContext("/vendedor/inventario", warehouseParam)
+      );
     },
     onError: (error) => {
       setFormError(
@@ -238,7 +227,11 @@ export default function NewStockAdjustmentPage() {
     setFormError(null);
 
     if (warehouseId === null) {
-      setFormError("Tu usuario no tiene un almacén asignado.");
+      setFormError(
+        isInvalidWarehouseOverride
+          ? "El identificador de la sucursal no es válido."
+          : "Tu usuario no tiene un almacén asignado."
+      );
       return;
     }
     if (!note.trim()) {
@@ -281,7 +274,10 @@ export default function NewStockAdjustmentPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/vendedor/inventario" className="btn btn-ghost">
+          <Link
+            href={withWarehouseContext("/vendedor/inventario", warehouseParam)}
+            className="btn btn-ghost"
+          >
             Cancelar
           </Link>
           <button
@@ -313,7 +309,11 @@ export default function NewStockAdjustmentPage() {
       ) : warehouseId === null ? (
         <NotificationToast
           type="error"
-          message="Tu usuario no tiene un almacén asignado."
+          message={
+            isInvalidWarehouseOverride
+              ? "El identificador de la sucursal no es válido."
+              : "Tu usuario no tiene un almacén asignado."
+          }
           className="my-6 w-full"
         />
       ) : (
