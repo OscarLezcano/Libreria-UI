@@ -4,7 +4,12 @@ import HomeFooter from "@/common/components/HomeFooter";
 import LoadingSpinner from "@/common/components/LoadingSpinner";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { getBook } from "@/common/data/books";
-import { getMyOrders, getOrderDetailsRequest } from "@/common/services/sales";
+import {
+  getMyOrders,
+  getOrderDetailsRequest,
+  type Order,
+  type OrderDetail,
+} from "@/common/services/sales";
 import { formatGs } from "@/common/utils/format";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -29,9 +34,10 @@ export default function MisCompraDetallePage() {
   const params = useParams();
   const router = useRouter();
   const id = Array.isArray(params?.id) ? params.id[0] : (params?.id as string);
+  const orderId = id ?? "";
 
-  const [order, setOrder] = useState<any>(null);
-  const [details, setDetails] = useState<any[]>([]);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [details, setDetails] = useState<OrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,11 +46,12 @@ export default function MisCompraDetallePage() {
     (async () => {
       try {
         setLoading(true);
+        if (!orderId) throw new Error("Pedido no encontrado");
         const data = await getMyOrders();
         const list = Array.isArray(data) ? data : [];
-        const found = list.find((o: any) => String(o?.id) === String(id));
+        const found = list.find((o) => String(o?.id) === String(orderId));
         if (!found) throw new Error("Pedido no encontrado");
-        const orderDetails = await getOrderDetailsRequest(id);
+        const orderDetails = await getOrderDetailsRequest(orderId);
         if (!cancelled) setOrder(found);
         if (!cancelled) setDetails(orderDetails);
       } catch (e) {
@@ -56,13 +63,17 @@ export default function MisCompraDetallePage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [orderId]);
 
   const items = details.length > 0
     ? details
     : order?.orderDetails || order?.order_details || order?.items || [];
-  const meta = getMeta(order?.status);
-  const dateRaw = order?.createdAt || order?.created_at || order?.date;
+  const meta = getMeta(order?.status ?? "");
+  const dateRaw = [
+    order?.createdAt,
+    order?.created_at,
+    order?.date,
+  ].find((value): value is string => typeof value === "string");
   const date = dateRaw ? new Date(dateRaw).toLocaleDateString("es-PY") : "-";
   const total = order?.totalPrice ?? order?.total ?? order?.subtotal ?? 0;
 
@@ -127,7 +138,7 @@ export default function MisCompraDetallePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {Array.isArray(items) && items.map((item: any, idx: number) => {
+                      {Array.isArray(items) && items.map((item: OrderDetail, idx: number) => {
                         const bookId = item?.bookId ?? item?.book_id;
                         const book = bookId ? getBook(String(bookId)) : null;
                         const title = item?.bookName ?? book?.title ?? `Libro ${bookId ?? idx}`;

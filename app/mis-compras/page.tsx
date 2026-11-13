@@ -4,7 +4,7 @@ import HomeFooter from "@/common/components/HomeFooter";
 import LoadingSpinner from "@/common/components/LoadingSpinner";
 import Pagination from "@/common/components/Pagination";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
-import { getMyOrders } from "@/common/services/sales";
+import { getMyOrders, type Order, type OrderItem } from "@/common/services/sales";
 import { formatGs } from "@/common/utils/format";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -28,7 +28,7 @@ function getMeta(status: string) {
 
 export default function MisComprasPage() {
   const router = useRouter();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -108,14 +108,14 @@ export default function MisComprasPage() {
                       </td>
                     </tr>
                   )}
-                  {visible.map((order: any) => {
+                  {visible.map((order) => {
                     const items = order?.orderDetails || order?.order_details || order?.items || [];
                     const meta = getMeta(order?.status);
                     const dateRaw = order?.createdAt || order?.created_at || order?.date;
                     const date = dateRaw ? new Date(dateRaw).toLocaleDateString("es-PY") : "-";
                     const total = order?.totalPrice ?? order?.total ?? order?.subtotal ?? 0;
                     const units = Array.isArray(items) && items.length > 0
-                      ? items.reduce((acc: number, it: any) => acc + Number(it?.quantity || 0), 0)
+                      ? items.reduce((acc: number, it: OrderItem) => acc + Number(it?.quantity || 0), 0)
                       : Number(order?.orderDetailIds?.length || 0);
 
                     return (

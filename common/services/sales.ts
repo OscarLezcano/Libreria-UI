@@ -56,6 +56,7 @@ export async function createOrderRequest(
 
 export interface OrderItem {
   bookId: number | string;
+  book_id?: number | string;
   quantity: number;
   price?: number;
   book?: {
@@ -78,11 +79,18 @@ export interface Order {
   orderNumber?: string;
   orderId?: string | number;
   items: OrderItem[];
+  orderDetails?: OrderItem[];
+  order_details?: OrderItem[];
+  orderDetailIds?: Array<string | number>;
   status: string;
   createdAt?: string;
+  created_at?: string;
   date?: string;
   createdDate?: string;
   couponCode?: string | null;
+  invoiceNumber?: string;
+  subtotal?: number;
+  totalPrice?: number;
   total?: number;
   [key: string]: unknown;
 }
