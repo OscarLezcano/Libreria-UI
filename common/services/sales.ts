@@ -19,6 +19,45 @@ export interface PaidOrder {
   invoiceNumber: string;
 }
 
+export interface OrderCheckoutData {
+  shipping: {
+    nombre: string;
+    apellido: string;
+    ruc: string;
+    departamento: string;
+    ciudad: string;
+    direccion: string;
+    telefono: string;
+  } | null;
+}
+
+const ORDER_CHECKOUT_DATA_KEY = "bigbooks.order-checkout-data";
+
+export function saveOrderCheckoutData(orderId: string, data: OrderCheckoutData): void {
+  if (typeof window === "undefined") return;
+  const raw = window.localStorage.getItem(ORDER_CHECKOUT_DATA_KEY);
+  let stored: Record<string, OrderCheckoutData> = {};
+  try {
+    stored = raw ? (JSON.parse(raw) as Record<string, OrderCheckoutData>) : {};
+  } catch {
+    stored = {};
+  }
+  stored[orderId] = data;
+  window.localStorage.setItem(ORDER_CHECKOUT_DATA_KEY, JSON.stringify(stored));
+}
+
+export function getOrderCheckoutData(orderId: string): OrderCheckoutData | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(ORDER_CHECKOUT_DATA_KEY);
+  if (!raw) return null;
+  try {
+    const stored = JSON.parse(raw) as Record<string, OrderCheckoutData>;
+    return stored[orderId] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function createOrderRequest(
   order: CreateOrderInput
 ): Promise<CreatedOrder> {
@@ -89,6 +128,10 @@ export interface Order {
   createdDate?: string;
   couponCode?: string | null;
   invoiceNumber?: string;
+  invoiceRuc?: string;
+  invoiceName?: string;
+  invoiceLastName?: string;
+  invoicePhone?: string;
   subtotal?: number;
   totalPrice?: number;
   total?: number;

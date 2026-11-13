@@ -12,6 +12,7 @@ import {
   type CreatedOrder,
   createOrderRequest,
   markOrderAsPaidRequest,
+  saveOrderCheckoutData,
 } from "@/common/services/sales";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -76,6 +77,7 @@ export default function PagoPage() {
 
       const paidOrder = await markOrderAsPaidRequest(order.id);
       setPaid(paidOrder);
+      saveOrderCheckoutData(order.id, { shipping });
       clear();
       setShowToast(true);
       window.setTimeout(() => setShowToast(false), 5000);

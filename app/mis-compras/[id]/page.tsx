@@ -5,6 +5,7 @@ import LoadingSpinner from "@/common/components/LoadingSpinner";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { getBook } from "@/common/data/books";
 import {
+  getOrderCheckoutData,
   getMyOrders,
   getOrderDetailsRequest,
   type Order,
@@ -40,6 +41,7 @@ export default function MisCompraDetallePage() {
   const [details, setDetails] = useState<OrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [checkoutData, setCheckoutData] = useState<ReturnType<typeof getOrderCheckoutData>>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,8 +54,10 @@ export default function MisCompraDetallePage() {
         const found = list.find((o) => String(o?.id) === String(orderId));
         if (!found) throw new Error("Pedido no encontrado");
         const orderDetails = await getOrderDetailsRequest(orderId);
+        const savedCheckoutData = getOrderCheckoutData(orderId);
         if (!cancelled) setOrder(found);
         if (!cancelled) setDetails(orderDetails);
+        if (!cancelled) setCheckoutData(savedCheckoutData);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Error al cargar detalle");
       } finally {
@@ -120,6 +124,76 @@ export default function MisCompraDetallePage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="mb-6 grid gap-6 lg:grid-cols-2">
+              <section className="card bg-base-100 card-border">
+                <div className="card-body">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-base-content/60">
+                    Datos de facturación
+                  </h2>
+                  <dl className="mt-3 grid gap-2 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">RUC / CI</dt>
+                      <dd className="font-semibold">{order.invoiceRuc || "-"}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">Nombre</dt>
+                      <dd className="font-semibold">{order.invoiceName || "-"}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">Apellido</dt>
+                      <dd className="font-semibold">{order.invoiceLastName || "-"}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">Teléfono</dt>
+                      <dd className="font-semibold">{order.invoicePhone || "-"}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </section>
+
+              <section className="card bg-base-100 card-border">
+                <div className="card-body">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-base-content/60">
+                    Datos de envío
+                  </h2>
+                  <dl className="mt-3 grid gap-2 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">Destinatario</dt>
+                      <dd className="text-right font-semibold">
+                        {checkoutData?.shipping
+                          ? `${checkoutData.shipping.nombre} ${checkoutData.shipping.apellido}`
+                          : "-"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">Dirección</dt>
+                      <dd className="text-right font-semibold">
+                        {checkoutData?.shipping?.direccion || "-"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">Ciudad</dt>
+                      <dd className="text-right font-semibold">
+                        {checkoutData?.shipping?.ciudad || "-"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">Departamento</dt>
+                      <dd className="text-right font-semibold">
+                        {checkoutData?.shipping?.departamento || "-"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-base-content/60">Teléfono</dt>
+                      <dd className="text-right font-semibold">
+                        {checkoutData?.shipping?.telefono || "-"}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </section>
             </div>
 
             <section className="card bg-base-100 card-border min-w-[720px]">
