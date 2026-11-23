@@ -351,7 +351,7 @@ function NuevaCompraContent() {
         <div>
           <h1 className="text-3xl font-extrabold">
             {isViewingPurchase
-              ? `Detalle de compra #${purchaseId}`
+              ? "Detalle de compra"
               : "Registrar Nueva Compra"}
           </h1>
           <p className="text-base-content/60 mt-1 text-sm">

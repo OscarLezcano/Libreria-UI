@@ -11,15 +11,17 @@ import { useWarehouseScope } from "@/common/hooks/useWarehouseScope";
 import {
   BOOKS_PAGE_SIZE,
   createBookRequest,
+  deleteBookRequest,
   getBookStockQuantityRequest,
   getBooksPageRequest,
+  type BooksPage,
   type CatalogEntity,
   updateBookRequest,
   type BookRecord,
 } from "@/common/services/books";
 import { formatGs } from "@/common/utils/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type AdminBook = bookInputType & { id: string };
@@ -112,6 +114,7 @@ export default function AdminLibrosPage() {
   const [formSession, setFormSession] = useState(0);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const saveBookMutation = useMutation({
     mutationFn: async ({
       id,
@@ -144,6 +147,33 @@ export default function AdminLibrosPage() {
       );
     },
   });
+  const deleteBookMutation = useMutation({
+    mutationFn: deleteBookRequest,
+    onSuccess: async () => {
+      const currentPageData = queryClient.getQueryData<BooksPage>([
+        "books",
+        "catalog",
+        page,
+        BOOKS_PAGE_SIZE,
+        query.trim(),
+      ]);
+      if (page > 1 && currentPageData?.books.length === 1) {
+        setPage((current) => current - 1);
+      }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["books", "catalog"] }),
+        queryClient.invalidateQueries({ queryKey: ["books", "detail"] }),
+        queryClient.invalidateQueries({ queryKey: ["stocks", "warehouse"] }),
+      ]);
+      setSubmissionSuccess("Libro eliminado del catálogo.");
+      setActionError(null);
+    },
+    onError: (error) => {
+      setActionError(
+        error instanceof Error ? error.message : "No se pudo eliminar el libro."
+      );
+    },
+  });
   const isLoading =
     booksQuery.isPending ||
     authorsQuery.isLoading ||
@@ -171,6 +201,14 @@ export default function AdminLibrosPage() {
     setSubmissionError(null);
     setSubmissionSuccess(null);
     saveBookMutation.mutate({ id: editing?.id ?? null, data });
+  };
+
+  const removeBook = (book: AdminBook) => {
+    if (!window.confirm(`¿Eliminar «${book.title}» del catálogo?`)) return;
+
+    setActionError(null);
+    setSubmissionSuccess(null);
+    deleteBookMutation.mutate(book.id);
   };
 
   return (
@@ -238,13 +276,14 @@ export default function AdminLibrosPage() {
                         <th>Géneros</th>
                         <th>Existencias</th>
                         <th className="text-right">Precio</th>
+                        <th className="text-center">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {books.length === 0 && (
                         <tr>
                           <td
-                            colSpan={6}
+                            colSpan={7}
                             className="text-base-content/60 py-8 text-center text-sm"
                           >
                             No se encontraron libros.
@@ -323,6 +362,26 @@ export default function AdminLibrosPage() {
                               ? `${formatGs(Number(book.price))} Gs`
                               : "—"}
                           </td>
+                          <td className="text-center">
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-square btn-sm text-error"
+                              disabled={deleteBookMutation.isPending}
+                              aria-label={`Eliminar ${book.title} del catálogo`}
+                              title={`Eliminar ${book.title}`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                removeBook(book);
+                              }}
+                            >
+                              {deleteBookMutation.isPending &&
+                              deleteBookMutation.variables === book.id ? (
+                                <span className="loading loading-spinner loading-xs" />
+                              ) : (
+                                <Trash2 className="size-4" aria-hidden="true" />
+                              )}
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -344,6 +403,14 @@ export default function AdminLibrosPage() {
                         : "No se pudieron cargar las existencias."
                     }
                     placement="toast"
+                  />
+                )}
+                {actionError && (
+                  <NotificationToast
+                    type="error"
+                    message={actionError}
+                    placement="toast"
+                    onClose={() => setActionError(null)}
                   />
                 )}
                 <Pagination

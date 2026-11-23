@@ -294,7 +294,7 @@ export default function AdminComprasPage() {
                                 className="link link-hover"
                                 onClick={(event) => event.stopPropagation()}
                               >
-                                {purchase.invoiceNumber || `Compra #${purchase.id}`}
+                                {purchase.invoiceNumber || "Sin factura"}
                               </Link>
                             </td>
                             <td>

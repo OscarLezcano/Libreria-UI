@@ -382,3 +382,18 @@ export async function updateBookRequest(
     throw new Error("No se pudo actualizar el libro");
   }
 }
+
+export async function deleteBookRequest(id: string): Promise<void> {
+  const response = await fetch(apiUrl(`stock/books/${id}`), {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      response.status === 401 || response.status === 403
+        ? "No tienes permisos para administrar libros."
+        : `No se pudo eliminar el libro (HTTP ${response.status}).`
+    );
+  }
+}
