@@ -4,10 +4,10 @@ import HomeFooter from "@/common/components/HomeFooter";
 import LoadingSpinner from "@/common/components/LoadingSpinner";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { getBook } from "@/common/data/books";
-import { getMyOrders } from "@/common/services/sales";
+import { getMyOrders, type Order } from "@/common/services/sales";
 import { formatGs } from "@/common/utils/format";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const STATUS_META: Record<string, { label: string; badge: string }> = {
@@ -25,12 +25,10 @@ function getMeta(status: string) {
   return STATUS_META[key] || { label: status || "Desconocido", badge: "badge-ghost" };
 }
 
-export default function MisCompraDetallePage() {
-  const params = useParams();
+export default function MisCompraDetallePage({ id }: { id: string }) {
   const router = useRouter();
-  const id = Array.isArray(params?.id) ? params.id[0] : (params?.id as string);
 
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +39,7 @@ export default function MisCompraDetallePage() {
         setLoading(true);
         const data = await getMyOrders();
         const list = Array.isArray(data) ? data : [];
-        const found = list.find((o: any) => String(o?.id) === String(id));
+        const found = list.find((item) => String(item.id) === id);
         if (!found) throw new Error("Pedido no encontrado");
         if (!cancelled) setOrder(found);
       } catch (e) {
@@ -56,7 +54,7 @@ export default function MisCompraDetallePage() {
   }, [id]);
 
   const items = order?.orderDetails || order?.order_details || order?.items || [];
-  const meta = getMeta(order?.status);
+  const meta = getMeta(order?.status ?? "");
   const dateRaw = order?.createdAt || order?.created_at || order?.date;
   const date = dateRaw ? new Date(dateRaw).toLocaleDateString("es-PY") : "-";
   const total = order?.totalPrice ?? order?.total ?? order?.subtotal ?? 0;
@@ -115,16 +113,18 @@ export default function MisCompraDetallePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {Array.isArray(items) && items.map((item: any, idx: number) => {
-                        const bookId = item?.bookId ?? item?.book_id;
+                      {Array.isArray(items) && items.map((item, idx) => {
+                        const bookId = item.bookId ?? item.book_id;
                         const book = bookId ? getBook(String(bookId)) : null;
-                        const title = item?.bookName ?? book?.title ?? `Libro ${bookId ?? idx}`;
-                        const price = Number(item?.unitPrice ?? item?.price ?? book?.price ?? 0);
-                        const qty = Number(item?.quantity ?? 1);
-                        const href = book ? `/book/${book.id}` : "#";
+                        const title = item.bookName ?? book?.title ?? `Libro ${bookId ?? idx}`;
+                        const price = Number(item.unitPrice ?? item.price ?? book?.price ?? 0);
+                        const qty = Number(item.quantity ?? 1);
+                        const href = book
+                          ? `/book?id=${encodeURIComponent(book.id)}`
+                          : "#";
 
                         return (
-                          <tr key={item?.id || idx}>
+                          <tr key={item.id || idx}>
                             <td>
                               <div className="flex items-center gap-3">
                                 {book?.coverSrc && (

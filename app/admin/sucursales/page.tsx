@@ -151,12 +151,14 @@ export default function AdminSucursalesPage() {
                           key={warehouse.id}
                           className="cursor-pointer hover:bg-base-200"
                           onClick={() =>
-                            router.push(`/admin/sucursales/${warehouse.id}`)
+                            router.push(
+                              `/vendedor/libros?warehouseId=${encodeURIComponent(warehouse.id)}`
+                            )
                           }
                         >
                           <td>
                             <Link
-                              href={`/admin/sucursales/${warehouse.id}`}
+                              href={`/vendedor/libros?warehouseId=${encodeURIComponent(warehouse.id)}`}
                               aria-label={`Ver sucursal ${warehouse.name}`}
                               className="text-base-content"
                               onClick={(event) => event.stopPropagation()}

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "war": "mvn clean package",
     "lint": "eslint"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-import { apiUrl, getAuthHeaders } from "@/common/services/http";
+import { apiFetch, apiUrl, getAuthHeaders } from "@/common/services/http";
 
 const PAGE_SIZE = 25;
 const SUPPLIERS_URL = "api/v1/suppliers";
@@ -71,7 +71,7 @@ export async function getSuppliersRequest(
   });
   if (search.trim()) query.set("search", search.trim());
 
-  const response = await fetch(apiUrl(`${SUPPLIERS_URL}?${query.toString()}`), {
+  const response = await apiFetch(apiUrl(`${SUPPLIERS_URL}?${query.toString()}`), {
     headers: getAuthHeaders(),
   });
 
@@ -90,7 +90,7 @@ export async function getSuppliersRequest(
 export async function getSupplierByIdRequest(
   id: string
 ): Promise<SupplierRecord | null> {
-  const response = await fetch(apiUrl(`${SUPPLIERS_URL}/${id}`), {
+  const response = await apiFetch(apiUrl(`${SUPPLIERS_URL}/${id}`), {
     headers: getAuthHeaders(),
   });
 
@@ -124,7 +124,7 @@ export async function searchSuppliersRequest(
 export async function createSupplierRequest(
   data: SupplierInput
 ): Promise<SupplierRecord> {
-  const response = await fetch(apiUrl(SUPPLIERS_URL), {
+  const response = await apiFetch(apiUrl(SUPPLIERS_URL), {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -142,7 +142,7 @@ export async function updateSupplierRequest(
   id: string,
   data: SupplierInput
 ): Promise<SupplierRecord> {
-  const response = await fetch(apiUrl(`${SUPPLIERS_URL}/${id}`), {
+  const response = await apiFetch(apiUrl(`${SUPPLIERS_URL}/${id}`), {
     method: "PUT",
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -157,7 +157,7 @@ export async function updateSupplierRequest(
 }
 
 export async function deleteSupplierRequest(id: string): Promise<void> {
-  const response = await fetch(apiUrl(`${SUPPLIERS_URL}/${id}`), {
+  const response = await apiFetch(apiUrl(`${SUPPLIERS_URL}/${id}`), {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

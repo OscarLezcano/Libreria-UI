@@ -1,4 +1,4 @@
-import { apiUrl, getAuthHeaders } from "@/common/services/http";
+import { apiFetch, apiUrl, getAuthHeaders } from "@/common/services/http";
 
 const WAREHOUSES_URL = "stock/warehouses";
 const DEFAULT_PAGE_SIZE = 10;
@@ -83,7 +83,7 @@ export async function getWarehousesRequest(
   });
   if (city.trim()) query.set("city", city.trim());
 
-  const response = await fetch(apiUrl(`${WAREHOUSES_URL}?${query.toString()}`), {
+  const response = await apiFetch(apiUrl(`${WAREHOUSES_URL}?${query.toString()}`), {
     headers: getAuthHeaders(),
   });
 
@@ -115,7 +115,7 @@ export async function getWarehousesRequest(
 export async function getWarehouseByIdRequest(
   id: number
 ): Promise<WarehouseRecord | null> {
-  const response = await fetch(apiUrl(`${WAREHOUSES_URL}/${id}`), {
+  const response = await apiFetch(apiUrl(`${WAREHOUSES_URL}/${id}`), {
     headers: getAuthHeaders(),
   });
 
@@ -131,7 +131,7 @@ export async function getWarehouseByIdRequest(
 export async function createWarehouseRequest(
   data: WarehouseInput
 ): Promise<WarehouseRecord> {
-  const response = await fetch(apiUrl(WAREHOUSES_URL), {
+  const response = await apiFetch(apiUrl(WAREHOUSES_URL), {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(data),

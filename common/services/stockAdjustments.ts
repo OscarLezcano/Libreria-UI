@@ -1,4 +1,4 @@
-import { apiUrl, getAuthHeaders } from "@/common/services/http";
+import { apiFetch, apiUrl, getAuthHeaders } from "@/common/services/http";
 
 const PAGE_SIZE = 6;
 
@@ -83,7 +83,7 @@ export async function getStockAdjustmentsPageRequest(
     page: String(Math.max(0, page - 1)),
     size: String(PAGE_SIZE),
   });
-  const response = await fetch(
+  const response = await apiFetch(
     apiUrl(`stock/stock-adjustments/warehouse/${warehouseId}?${query}`),
     { headers: getAuthHeaders() }
   );
@@ -104,7 +104,7 @@ export async function getStockAdjustmentsPageRequest(
 export async function getStockAdjustmentDetailsRequest(
   adjustmentId: string
 ): Promise<StockAdjustmentDetailRecord[]> {
-  const response = await fetch(
+  const response = await apiFetch(
     apiUrl(`stock/stock-adjustments/${adjustmentId}/details`),
     { headers: getAuthHeaders() }
   );
@@ -138,7 +138,7 @@ export async function createStockAdjustmentRequest(
   warehouseId: number,
   adjustment: CreateStockAdjustmentInput
 ): Promise<StockAdjustmentRecord> {
-  const response = await fetch(
+  const response = await apiFetch(
     apiUrl(`stock/stock-adjustments/warehouse/${warehouseId}`),
     {
       method: "POST",

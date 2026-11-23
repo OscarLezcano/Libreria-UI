@@ -1,4 +1,4 @@
-import { apiUrl, getAuthHeaders } from "@/common/services/http";
+import { apiFetch, apiUrl, getAuthHeaders } from "@/common/services/http";
 
 export interface CreateOrderInput {
   items: { bookId: number; quantity: number }[];
@@ -8,7 +8,7 @@ export interface CreateOrderInput {
 export async function createOrderRequest(
   order: CreateOrderInput
 ): Promise<string> {
-  const response = await fetch(apiUrl("sales/orders"), {
+  const response = await apiFetch(apiUrl("sales/orders"), {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(order),
@@ -32,9 +32,13 @@ export async function createOrderRequest(
 }
 
 export interface OrderItem {
-  bookId: number | string;
-  quantity: number;
-  price?: number;
+  id?: number | string;
+  bookId?: number | string | null;
+  book_id?: number | string | null;
+  bookName?: string;
+  quantity?: number | string;
+  unitPrice?: number | string;
+  price?: number | string;
   book?: {
     id?: number | string;
     title?: string;
@@ -46,18 +50,23 @@ export interface OrderItem {
 export interface Order {
   id: string | number;
   orderId?: string | number;
-  items: OrderItem[];
+  items?: OrderItem[];
+  orderDetails?: OrderItem[];
+  order_details?: OrderItem[];
   status: string;
   createdAt?: string;
+  created_at?: string;
   date?: string;
   createdDate?: string;
   couponCode?: string | null;
-  total?: number;
+  totalPrice?: number | string;
+  total?: number | string;
+  subtotal?: number | string;
   [key: string]: unknown;
 }
 
 export async function getMyOrders(): Promise<Order[]> {
-  const response = await fetch(apiUrl("sales/orders"), {
+  const response = await apiFetch(apiUrl("sales/orders"), {
     method: "GET",
     headers: getAuthHeaders(),
     credentials: "include",

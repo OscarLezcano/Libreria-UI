@@ -5,20 +5,29 @@ import { LayoutDashboard, LogOut, Store, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-function getShowAdminLink() {
+type PanelRole = "ADMIN" | "SELLER" | null;
+
+function getPanelRole(): PanelRole {
   const storedUser = localStorage.getItem("bigbooks.user");
-  if (!storedUser) return false;
+  if (!storedUser) return null;
 
   try {
     const user: unknown = JSON.parse(storedUser);
-    if (!user || typeof user !== "object") return false;
+    if (!user || typeof user !== "object") return null;
 
     const { roleNames } = user as {
       roleNames?: unknown;
     };
-    return Array.isArray(roleNames) && roleNames.includes("ADMIN");
+    if (!Array.isArray(roleNames)) return null;
+
+    const roles = roleNames.filter(
+      (role): role is string => typeof role === "string"
+    );
+    if (roles.includes("ADMIN")) return "ADMIN";
+    if (roles.includes("SELLER") || roles.includes("SALLER")) return "SELLER";
+    return null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -29,11 +38,13 @@ function subscribeToUserStorage(onChange: () => void) {
 
 export default function UserMenu() {
   const router = useRouter();
-  const showAdminLink = useSyncExternalStore(
+  const panelRole = useSyncExternalStore(
     subscribeToUserStorage,
-    getShowAdminLink,
-    () => false
+    getPanelRole,
+    () => null
   );
+  const showAdminLink = panelRole === "ADMIN";
+  const showSellerLink = panelRole === "ADMIN" || panelRole === "SELLER";
 
   const logout = () => {
     document.cookie = "token=; path=/; max-age=0; Secure; SameSite=Strict";
@@ -62,12 +73,14 @@ export default function UserMenu() {
             </Link>
           </li>
         )}
-        <li>
-          <Link href="/vendedor/libros">
-            <Store className="size-4" strokeWidth={2} />
-            Panel Vendedor
-          </Link>
-        </li>
+        {showSellerLink && (
+          <li>
+            <Link href="/vendedor/libros">
+              <Store className="size-4" strokeWidth={2} />
+              Panel Vendedor
+            </Link>
+          </li>
+        )}
         <li>
           <button type="button" onClick={logout} className="text-error">
             <LogOut className="size-4 text-error" strokeWidth={2} />

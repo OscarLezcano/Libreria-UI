@@ -11,11 +11,12 @@ import { useGenresByIds } from "@/common/hooks/useGenresByIds";
 import { getBookByIdRequest } from "@/common/services/books";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 export default function BookDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id") ?? "";
   const isApiBook = /^\d+$/.test(id);
   const bookQuery = useQuery({
     queryKey: ["book", id],

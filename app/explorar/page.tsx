@@ -87,7 +87,7 @@ export default function ExplorarPage() {
                   <BookCard
                     key={book.id}
                     bookId={book.id}
-                    href={`/book/${book.id}`}
+                    href={`/book?id=${encodeURIComponent(book.id)}`}
                     coverSrc={book.coverSrc}
                     price={book.price}
                     title={book.title}

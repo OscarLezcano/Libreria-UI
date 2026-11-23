@@ -1,4 +1,4 @@
-import { apiUrl, getAuthHeaders } from "@/common/services/http";
+import { apiFetch, apiUrl, getAuthHeaders } from "@/common/services/http";
 import type { PurchaseStatus } from "@/common/data/suppliers";
 
 const PURCHASES_URL = "api/v1/purchases";
@@ -99,7 +99,7 @@ export async function getPurchasesRequest(
   if (status !== "ALL") query.set("status", status);
   if (invoiceNumber.trim()) query.set("invoiceNumber", invoiceNumber.trim());
 
-  const response = await fetch(
+  const response = await apiFetch(
     apiUrl(`${PURCHASES_URL}?${query.toString()}`),
     { headers: getAuthHeaders() }
   );
@@ -123,7 +123,7 @@ export async function getPurchasesRequest(
 export async function getPurchaseByIdRequest(
   id: string
 ): Promise<PurchaseRecord | null> {
-  const response = await fetch(apiUrl(`${PURCHASES_URL}/${id}`), {
+  const response = await apiFetch(apiUrl(`${PURCHASES_URL}/${id}`), {
     headers: getAuthHeaders(),
   });
 
@@ -139,7 +139,7 @@ export async function getPurchaseByIdRequest(
 export async function getPurchaseDetailsRequest(
   id: string
 ): Promise<PurchaseDetailRecord[] | null> {
-  const response = await fetch(apiUrl(`${PURCHASES_URL}/${id}/details`), {
+  const response = await apiFetch(apiUrl(`${PURCHASES_URL}/${id}/details`), {
     headers: getAuthHeaders(),
   });
 
@@ -166,7 +166,7 @@ export async function getPurchaseDetailsRequest(
 export async function createPurchaseRequest(
   purchase: CreatePurchaseInput
 ): Promise<PurchaseRecord> {
-  const response = await fetch(apiUrl(PURCHASES_URL), {
+  const response = await apiFetch(apiUrl(PURCHASES_URL), {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(purchase),
@@ -203,7 +203,7 @@ export async function updatePurchaseStatusRequest(
     body.invoiceNumber = normalizedInvoiceNumber;
   }
 
-  const response = await fetch(apiUrl(`${PURCHASES_URL}/${id}/status`), {
+  const response = await apiFetch(apiUrl(`${PURCHASES_URL}/${id}/status`), {
     method: "PATCH",
     headers: getAuthHeaders(),
     body: JSON.stringify(body),

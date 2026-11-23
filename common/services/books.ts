@@ -1,5 +1,5 @@
 import type { bookInputType } from "@/common/schemas/book/BookInputSchema";
-import { apiUrl, getAuthHeaders } from "@/common/services/http";
+import { apiFetch, apiUrl, getAuthHeaders } from "@/common/services/http";
 
 export const BOOKS_PAGE_SIZE = 4;
 const WAREHOUSE_STOCK_PAGE_SIZE = 100;
@@ -65,7 +65,7 @@ async function getAllPages<T>(resource: string, name?: string): Promise<T[]> {
     });
     if (name) query.set("name", name);
 
-    const response = await fetch(
+    const response = await apiFetch(
       apiUrl(`stock/${resource}?${query.toString()}`),
       { headers: getAuthHeaders() }
     );
@@ -97,7 +97,7 @@ export async function getBooksPageRequest(
     size: String(size),
   });
   if (options.title?.trim()) query.set("title", options.title.trim());
-  const response = await fetch(apiUrl(`stock/books?${query.toString()}`), {
+  const response = await apiFetch(apiUrl(`stock/books?${query.toString()}`), {
     headers: getAuthHeaders(),
   });
 
@@ -123,7 +123,7 @@ export async function getBooksPageRequest(
 export async function getBookByIdRequest(
   id: string
 ): Promise<BookRecord | null> {
-  const response = await fetch(apiUrl(`stock/books/${id}`), {
+  const response = await apiFetch(apiUrl(`stock/books/${id}`), {
     headers: getAuthHeaders(),
   });
 
@@ -138,7 +138,7 @@ export async function getBookStockQuantityRequest(
   warehouseId: number,
   bookId: number
 ): Promise<number> {
-  const response = await fetch(
+  const response = await apiFetch(
     apiUrl(`stock/stocks/warehouse/${warehouseId}/book/${bookId}`),
     { headers: getAuthHeaders() }
   );
@@ -172,7 +172,7 @@ export async function getWarehouseBookStocksRequest(
       page: String(page),
       size: String(WAREHOUSE_STOCK_PAGE_SIZE),
     });
-    const response = await fetch(
+    const response = await apiFetch(
       apiUrl(`stock/stocks/warehouse/${warehouseId}?${query.toString()}`),
       { headers: getAuthHeaders() }
     );
@@ -224,7 +224,7 @@ export async function getWarehouseBookStocksRequest(
 export async function getAuthorByIdRequest(
   id: number
 ): Promise<CatalogEntity | null> {
-  const response = await fetch(apiUrl(`stock/authors/${id}`), {
+  const response = await apiFetch(apiUrl(`stock/authors/${id}`), {
     headers: getAuthHeaders(),
   });
 
@@ -238,7 +238,7 @@ export async function getAuthorByIdRequest(
 export async function getGenreByIdRequest(
   id: number
 ): Promise<CatalogEntity | null> {
-  const response = await fetch(apiUrl(`stock/genres/${id}`), {
+  const response = await apiFetch(apiUrl(`stock/genres/${id}`), {
     headers: getAuthHeaders(),
   });
 
@@ -283,7 +283,7 @@ async function createCatalogEntityRequest(
   resource: CatalogResource,
   name: string
 ): Promise<CatalogEntity> {
-  const response = await fetch(apiUrl(`stock/${resource}`), {
+  const response = await apiFetch(apiUrl(`stock/${resource}`), {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({ name }),
@@ -346,7 +346,7 @@ export async function createBookRequest(
     resolveCatalogIds("authors", data.authors),
     resolveCatalogIds("genres", data.genres),
   ]);
-  const response = await fetch(apiUrl("stock/books"), {
+  const response = await apiFetch(apiUrl("stock/books"), {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(toBookRequest(data, authorIds, genreIds)),
@@ -372,7 +372,7 @@ export async function updateBookRequest(
     resolveCatalogIds("authors", data.authors),
     resolveCatalogIds("genres", data.genres),
   ]);
-  const response = await fetch(apiUrl(`stock/books/${id}`), {
+  const response = await apiFetch(apiUrl(`stock/books/${id}`), {
     method: "PUT",
     headers: getAuthHeaders(),
     body: JSON.stringify(toBookRequest(data, authorIds, genreIds)),
@@ -384,7 +384,7 @@ export async function updateBookRequest(
 }
 
 export async function deleteBookRequest(id: string): Promise<void> {
-  const response = await fetch(apiUrl(`stock/books/${id}`), {
+  const response = await apiFetch(apiUrl(`stock/books/${id}`), {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

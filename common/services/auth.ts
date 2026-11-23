@@ -1,6 +1,6 @@
 import type { loginInputType } from "@/common/schemas/auth/LoginInputSchema";
 import type { registerInputType } from "@/common/schemas/auth/RegisterInputSchema";
-import { apiUrl } from "@/common/services/http";
+import { apiFetch, apiUrl } from "@/common/services/http";
 
 const HEADER = { "Content-Type": "application/json" };
 
@@ -60,7 +60,7 @@ export async function loginRequest(
 export async function registerRequest(
   data: registerInputType
 ): Promise<void> {
-  const response = await fetch(apiUrl("auth/register"), {
+  const response = await apiFetch(apiUrl("auth/register"), {
     method: "POST",
     headers: HEADER,
     body: JSON.stringify(data),

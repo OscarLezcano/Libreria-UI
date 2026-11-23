@@ -64,7 +64,7 @@ export default function LoginForm({
       {showAuthNotice && (
         <NotificationToast
           type="info"
-          message="Necesitás iniciar sesión para acceder a ese recurso."
+          message="Debés iniciar sesión para realizar esa acción."
           placement="toast"
           onClose={() => setShowAuthNotice(false)}
         />
