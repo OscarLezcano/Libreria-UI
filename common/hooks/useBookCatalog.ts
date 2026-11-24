@@ -71,8 +71,8 @@ export function useBookCatalog(
     catalog,
     totalPages: booksQuery.data?.totalPages ?? 1,
     totalElements: booksQuery.data?.totalElements ?? 0,
-    isLoading: booksQuery.isPending || authorsQuery.isLoading,
-    isError: booksQuery.isError || authorsQuery.isError,
+    isLoading: booksQuery.isPending,
+    isError: booksQuery.isError,
   };
 }
 
@@ -97,11 +97,10 @@ export function useCartBooks(bookIds: string[]) {
 
   return {
     catalog,
-    isLoading:
-      bookQueries.some((query) => query.isPending) ||
-      authorsQuery.isLoading,
-    isError:
-      bookQueries.some((query) => query.isError) ||
-      authorsQuery.isError,
+    isLoading: bookQueries.some((query) => query.isPending),
+    isError: bookQueries.some((query) => query.isError),
+    refetchBooks: async () => {
+      await Promise.all(bookQueries.map((query) => query.refetch()));
+    },
   };
 }

@@ -6,170 +6,187 @@ import NotificationToast from "@/common/components/NotificationToast";
 import PaymentForm from "@/common/components/PaymentForm";
 import ReaderNavbar from "@/common/components/ReaderNavbar";
 import { useCart } from "@/common/context/CartContext";
-import { couponDiscount, findCoupon } from "@/common/data/coupons";
-import { useCartBooks } from "@/common/hooks/useBookCatalog";
+import { getOrderStatusMeta } from "@/common/data/orders";
 import {
-  type CreatedOrder,
-  createOrderRequest,
+  getOrderByNumeroOrdenRequest,
   markOrderAsPaidRequest,
-  saveOrderCheckoutData,
+  NUMERO_ORDEN_PATTERN,
+  type Order,
 } from "@/common/services/sales";
-import { CheckCircle2 } from "lucide-react";
+import { formatGs } from "@/common/utils/format";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect } from "react";
 
-const formatGs = (value: number) =>
-  new Intl.NumberFormat("es-PY").format(value);
+const SESSION_KEY = "bigbooks.checkout-session";
 
-interface PaidData {
-  orderNumber: string;
-  invoiceNumber: string;
+const PAID_STATUSES = new Set([
+  "PAID",
+  "APPROVED",
+  "COMPLETED",
+  "SHIPPED",
+  "DELIVERED",
+  "REFUNDED",
+]);
+
+function isPaidStatus(status: string): boolean {
+  return PAID_STATUSES.has(status.trim().toUpperCase());
 }
 
-export default function PagoPage() {
-  const { items, coupon, shipping, clear } = useCart();
-  const { catalog, isLoading, isError } = useCartBooks(
-    items.map((item) => item.bookId)
-  );
-  const [paid, setPaid] = useState<PaidData | null>(null);
-  const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
+function joinParts(parts: (string | null | undefined)[]): string {
+  return parts.filter((part): part is string => Boolean(part?.trim())).join(" ");
+}
 
-  const lines = items.flatMap((item) => {
-    const book = catalog.find((candidate) => candidate.id === item.bookId);
-    return book ? [{ item, book }] : [];
+function PagarPedidoPageContent() {
+  const searchParams = useSearchParams();
+  const rawNumeroOrden = searchParams.get("numero");
+  const numeroOrden = typeof rawNumeroOrden === "string" ? rawNumeroOrden.trim() : "";
+  const isValid = NUMERO_ORDEN_PATTERN.test(numeroOrden);
+
+  const { clear, clearCheckout } = useCart();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const orderQuery = useQuery({
+    queryKey: ["orders", "numero", numeroOrden],
+    queryFn: () => getOrderByNumeroOrdenRequest(numeroOrden),
+    enabled: isValid,
+    staleTime: 0,
   });
-  const subtotal = lines.reduce(
-    (total, { item, book }) => total + (book.price ?? 0) * item.quantity,
-    0
+  const order = orderQuery.data ?? null;
+
+  const finishPaid = useCallback(
+    (paidOrder: Order) => {
+      clear();
+      clearCheckout();
+      localStorage.removeItem(SESSION_KEY);
+      void queryClient.invalidateQueries({ queryKey: ["orders", "mine"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["orders", "numero", paidOrder.numeroOrden],
+      });
+      router.replace(`/pedidos?numero=${encodeURIComponent(paidOrder.numeroOrden)}`);
+    },
+    [clear, clearCheckout, queryClient, router]
   );
-  const applied = coupon ? findCoupon(coupon) : undefined;
-  const total = Math.max(0, subtotal - (applied ? couponDiscount(applied, subtotal) : 0));
-  const canPay =
-    items.length > 0 &&
-    lines.length === items.length &&
-    lines.every(
-      ({ item, book }) =>
-        book.price !== null &&
-        Number.isSafeInteger(Number(item.bookId)) &&
-        Number(item.bookId) > 0
-    );
+
+  useEffect(() => {
+    if (order && isPaidStatus(order.status)) finishPaid(order);
+  }, [order, finishPaid]);
 
   const handlePaid = async () => {
+    if (!order || !isValid) {
+      throw new Error("No se pudo identificar el pedido a pagar.");
+    }
     try {
-      setPaymentError(null);
-      let order = createdOrder;
-      if (!order) {
-        order = await createOrderRequest({
-          items: lines.map(({ item }) => ({
-            bookId: Number(item.bookId),
-            quantity: item.quantity,
-          })),
-          invoiceName: shipping?.nombre ?? "",
-          invoiceLastName: shipping?.apellido ?? "",
-          invoiceRuc: shipping?.ruc ?? "",
-          invoicePhone: shipping?.telefono ?? "",
-          ...(coupon ? { couponCode: coupon } : {}),
-        });
-        setCreatedOrder(order);
-      }
-
-      const paidOrder = await markOrderAsPaidRequest(order.id);
-      setPaid(paidOrder);
-      saveOrderCheckoutData(order.id, { shipping });
-      clear();
-      setShowToast(true);
-      window.setTimeout(() => setShowToast(false), 5000);
+      const paidOrder = await markOrderAsPaidRequest(numeroOrden);
+      finishPaid(paidOrder);
     } catch (error) {
-      setPaymentError(
-        error instanceof Error
-          ? error.message
-          : "No se pudo completar el pago. Intentá nuevamente."
-      );
+      try {
+        const currentOrder = await getOrderByNumeroOrdenRequest(numeroOrden);
+        if (currentOrder && isPaidStatus(currentOrder.status)) {
+          finishPaid(currentOrder);
+          return;
+        }
+      } catch {
+        // Se conserva el error original del intento de pago.
+      }
+      throw error;
     }
   };
+
+  if (!isValid) {
+    return (
+      <main className="bg-base-100 flex min-h-dvh flex-col">
+        <ReaderNavbar active="compras" />
+        <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 text-center lg:px-8">
+          <h1 className="text-2xl font-extrabold">Número de pedido inválido</h1>
+          <p className="text-base-content/60 mt-1 text-sm">
+            El enlace no contiene un número de orden válido.
+          </p>
+          <Link href="/mis-compras" className="btn btn-primary mt-6">
+            Ver mis compras
+          </Link>
+        </div>
+        <HomeFooter />
+      </main>
+    );
+  }
+
+  const statusMeta = order ? getOrderStatusMeta(order.status) : null;
+  const shipping = order?.shipping;
+  const recipient = joinParts([shipping?.name, shipping?.lastName]);
+  const address = joinParts([
+    shipping?.address,
+    shipping?.city,
+    shipping?.department,
+  ]);
+  const total = order?.totalPrice ?? 0;
+  const details = order?.details ?? [];
 
   return (
     <main className="bg-base-100 flex min-h-dvh flex-col">
       <ReaderNavbar active="compras" />
 
-      <div className="mx-auto max-w-6xl flex-1 px-4 py-10 lg:px-8">
-        {paid ? (
-          <div className="mt-8 flex justify-center">
-            <div className="card bg-base-100 card-border w-full max-w-sm">
-              <div className="card-body items-center text-center">
-                <CheckCircle2
-                  className="size-16 text-success"
-                  strokeWidth={1.5}
-                />
-                <h2 className="mt-2 text-xl font-extrabold">
-                  ¡Pago aprobado!
-                </h2>
-                <p className="text-base-content/60 mt-2 text-sm">
-                  N° de pedido: <b className="text-base-content">{paid.orderNumber}</b>
-                </p>
-                <p className="text-base-content/60 mt-1 text-sm">
-                  N° de factura: <b className="text-base-content">{paid.invoiceNumber}</b>
-                </p>
-                <div className="card-actions mt-4 flex-col justify-center gap-2">
-                  <Link href="/explorar" className="btn btn-primary w-full">
-                    Seguir explorando
-                  </Link>
-                </div>
-              </div>
-            </div>
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 lg:px-8">
+        {orderQuery.isPending ? (
+          <LoadingSpinner label="Cargando pedido" />
+        ) : orderQuery.isError ? (
+          <div className="mx-auto my-10 flex w-full max-w-xl flex-col gap-3">
+            <NotificationToast
+              type="error"
+              message="No se pudo cargar el pedido. Revisá tu conexión e intentá nuevamente."
+            />
+            <button
+              type="button"
+              className="btn btn-outline self-start"
+              onClick={() => void orderQuery.refetch()}
+            >
+              Reintentar
+            </button>
           </div>
-        ) : items.length === 0 ? (
+        ) : !order ? (
           <div className="py-10 text-center">
-            <p className="text-lg font-bold">No hay un pedido pendiente de pago</p>
+            <h1 className="text-2xl font-extrabold">Pedido no encontrado</h1>
             <p className="text-base-content/60 mt-1 text-sm">
-              Agregá libros a tu carrito antes de pagar.
+              Verificá el número de orden o revisá tu historial de compras.
             </p>
-            <Link href="/explorar" className="btn btn-primary mt-6">
-              Explorar catálogo
+            <Link href="/mis-compras" className="btn btn-primary mt-6">
+              Ver mis compras
             </Link>
           </div>
-        ) : isLoading ? (
-          <LoadingSpinner label="Cargando productos del pedido" />
-        ) : isError ? (
-          <NotificationToast
-            type="error"
-            message="No se pudieron cargar los libros del pedido."
-            className="mx-auto my-10 w-full max-w-xl"
-          />
-        ) : !shipping ? (
+        ) : isPaidStatus(order.status) ? (
+          <LoadingSpinner label="Redirigiendo al detalle del pedido" />
+        ) : order.status === "CANCELLED" || order.status === "CANCELED" ? (
           <div className="py-10 text-center">
-            <p className="text-lg font-bold">Faltan los datos de envío</p>
-            <Link href="/checkout" className="btn btn-primary mt-6">
-              Completar envío
+            <h1 className="text-2xl font-extrabold">Pedido cancelado</h1>
+            <p className="text-base-content/60 mt-1 text-sm">
+              El pedido {order.numeroOrden} ya no puede pagarse.
+            </p>
+            <Link href="/mis-compras" className="btn btn-primary mt-6">
+              Ver mis compras
             </Link>
           </div>
-        ) : !canPay ? (
+        ) : order.status !== "PENDING" ? (
           <div className="py-10 text-center">
-            <p className="text-lg font-bold">No se puede procesar este pedido</p>
+            <h1 className="text-2xl font-extrabold">Pedido {order.numeroOrden}</h1>
             <p className="text-base-content/60 mt-1 text-sm">
-              Revisá que todos los libros sigan disponibles y tengan precio.
+              Estado actual: {statusMeta?.label ?? order.status}
             </p>
-            <Link href="/carrito" className="btn btn-primary mt-6">
-              Volver al carrito
+            <Link
+              href={`/pedidos?numero=${encodeURIComponent(order.numeroOrden)}`}
+              className="btn btn-primary mt-6"
+            >
+              Ver detalle del pedido
             </Link>
           </div>
         ) : (
           <>
-            <h1 className="text-2xl font-extrabold">Pago</h1>
+            <h1 className="text-2xl font-extrabold">Pagar pedido {order.numeroOrden}</h1>
             <p className="text-base-content/60 mt-1 text-sm">
               Ingresá los datos de tu tarjeta para completar la compra
             </p>
 
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-              {paymentError && (
-                <NotificationToast
-                  type="error"
-                  message={paymentError}
-                  className="lg:col-span-2"
-                />
-              )}
               <PaymentForm total={total} onPaid={handlePaid} />
 
               <aside className="flex flex-col gap-4 self-start">
@@ -178,15 +195,15 @@ export default function PagoPage() {
                     <h2 className="card-title text-base">Total a pagar</h2>
                     <div className="flex justify-between py-1 text-sm">
                       <span className="text-base-content/60">Subtotal</span>
-                      <span>{formatGs(subtotal)} Gs</span>
+                      <span>{formatGs(order.subtotal)} Gs</span>
                     </div>
-                    {applied && (
+                    {order.couponCode && order.discountAmount > 0 && (
                       <div className="flex justify-between py-1 text-sm">
                         <span className="text-base-content/60">
-                          Descuento ({applied.code})
+                          Descuento ({order.couponCode})
                         </span>
                         <span className="text-success">
-                          -{formatGs(couponDiscount(applied, subtotal))} Gs
+                          -{formatGs(order.discountAmount)} Gs
                         </span>
                       </div>
                     )}
@@ -194,23 +211,46 @@ export default function PagoPage() {
                       <span>Total</span>
                       <span>{formatGs(total)} Gs</span>
                     </div>
+                    {details.length > 0 && (
+                      <p className="text-base-content/60 mt-1 text-xs">
+                        {details.length} producto{details.length !== 1 ? "s" : ""} ·{" "}
+                        {order.totalUnits ?? details.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+                        unidad{order.totalUnits === 1 ? "" : "es"}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="card bg-base-200">
                   <div className="card-body gap-1">
                     <h2 className="text-sm font-bold">Envío a</h2>
-                    <p className="text-base-content/70 text-sm">
-                      {shipping.direccion}, {shipping.ciudad}, {shipping.departamento}
-                    </p>
-                    <p className="text-base-content/60 text-xs">
-                      Contacto: {shipping.telefono}
-                    </p>
+                    {shipping ? (
+                      <>
+                        <p className="text-base-content/70 text-sm">
+                          {recipient ? `${recipient} · ` : ""}
+                          {address || "Dirección no disponible"}
+                        </p>
+                        {shipping.reference && (
+                          <p className="text-base-content/60 text-xs">
+                            Referencia: {shipping.reference}
+                          </p>
+                        )}
+                        {shipping.phone && (
+                          <p className="text-base-content/60 text-xs">
+                            Contacto: {shipping.phone}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-base-content/60 text-sm">
+                        El pedido no tiene datos de envío registrados.
+                      </p>
+                    )}
                     <Link
-                      href="/checkout"
+                      href="/mis-compras"
                       className="link link-primary mt-1 self-start text-xs"
                     >
-                      Modificar datos de envío
+                      Ver mis compras
                     </Link>
                   </div>
                 </div>
@@ -220,16 +260,15 @@ export default function PagoPage() {
         )}
       </div>
 
-      {showToast && (
-        <NotificationToast
-          type="success"
-          message={`Pago confirmado · pedido ${paid?.orderNumber}`}
-          placement="toast"
-          onClose={() => setShowToast(false)}
-        />
-      )}
-
       <HomeFooter />
     </main>
+  );
+}
+
+export default function PagarPedidoPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner label="Cargando pedido" />}>
+      <PagarPedidoPageContent />
+    </Suspense>
   );
 }

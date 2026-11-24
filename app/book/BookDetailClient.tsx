@@ -129,7 +129,19 @@ export default function BookDetailPage() {
             </div>
 
             <aside className="self-start">
-              {book.price === null ? (
+              {!isApiBook ? (
+                <div className="card bg-base-100 card-border">
+                  <div className="card-body">
+                    <p className="font-bold">Producto de demostración</p>
+                    <p className="text-base-content/60 text-sm">
+                      No disponible para compra. Explorá el catálogo para ver libros reales.
+                    </p>
+                    <Link href="/explorar" className="btn btn-primary btn-sm mt-2">
+                      Explorar catálogo
+                    </Link>
+                  </div>
+                </div>
+              ) : book.price === null ? (
                 <div className="card bg-base-100 card-border">
                   <div className="card-body">
                     <p className="font-bold">Precio no disponible</p>

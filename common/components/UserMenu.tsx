@@ -1,6 +1,8 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
+import { AUTH_CHANGED_EVENT, useCart } from "@/common/context/CartContext";
 import { LayoutDashboard, LogOut, Store, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -33,11 +35,17 @@ function getPanelRole(): PanelRole {
 
 function subscribeToUserStorage(onChange: () => void) {
   window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
+  window.addEventListener(AUTH_CHANGED_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(AUTH_CHANGED_EVENT, onChange);
+  };
 }
 
 export default function UserMenu() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { clear } = useCart();
   const panelRole = useSyncExternalStore(
     subscribeToUserStorage,
     getPanelRole,
@@ -47,8 +55,14 @@ export default function UserMenu() {
   const showSellerLink = panelRole === "ADMIN" || panelRole === "SELLER";
 
   const logout = () => {
+    clear();
+    queryClient.clear();
     document.cookie = "token=; path=/; max-age=0; Secure; SameSite=Strict";
     localStorage.removeItem("bigbooks.user");
+    localStorage.removeItem("bigbooks.order-checkout-data");
+    localStorage.removeItem("bigbooks.checkout-session");
+    sessionStorage.removeItem("bigbooks.checkout-session");
+    window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
     router.replace("/auth/login");
   };
 
