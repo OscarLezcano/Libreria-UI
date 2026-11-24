@@ -19,7 +19,7 @@ interface SiteNavbarProps {
 
 export default function SiteNavbar({ items, active }: SiteNavbarProps) {
   const pathname = usePathname();
-  const { count } = useCart();
+  const { count, hydrated } = useCart();
   const activeKey =
     active ??
     items.find((item) => {
@@ -62,7 +62,7 @@ export default function SiteNavbar({ items, active }: SiteNavbarProps) {
         </nav>
         <div className="navbar-end gap-2">
           <div className="indicator">
-            {count > 0 && (
+            {hydrated && count > 0 && (
               <span className="badge badge-primary indicator-item badge-xs">
                 {count}
               </span>

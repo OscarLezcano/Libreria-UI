@@ -19,6 +19,7 @@ export const config = {
     "/checkout/:path*",
     "/pago/:path*",
     "/mis-compras/:path*",
+    "/pedidos/:path*",
     "/admin/:path*",
     "/vendedor/:path*",
   ],
