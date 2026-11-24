@@ -11,10 +11,13 @@ import { useCartBooks } from "@/common/hooks/useBookCatalog";
 import Link from "next/link";
 
 export default function CarritoPage() {
-  const { items, remove, setQuantity } = useCart();
-  const { catalog, isLoading, isError } = useCartBooks(
-    items.map((item) => item.bookId)
-  );
+  const { items, hydrated, remove, setQuantity } = useCart();
+  const {
+    catalog,
+    isLoading,
+    isError,
+    refetchBooks,
+  } = useCartBooks(items.map((item) => item.bookId));
 
   const lines = items.flatMap((item) => {
     const book = catalog.find((candidate) => candidate.id === item.bookId);
@@ -23,34 +26,32 @@ export default function CarritoPage() {
   const missingItems = items.filter(
     (item) => !catalog.some((book) => book.id === item.bookId)
   );
-
   const subtotal = lines.reduce(
     (total, { item, book }) => total + (book.price ?? 0) * item.quantity,
     0
   );
   const canCheckout =
-    missingItems.length === 0 && lines.every(({ book }) => book.price !== null);
+    !isError &&
+    missingItems.length === 0 &&
+    lines.length === items.length &&
+    lines.every(({ book }) => book.price !== null);
 
   return (
     <main className="bg-base-100 flex min-h-dvh flex-col">
-      <ReaderNavbar active="compras" />
+      <ReaderNavbar />
 
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 lg:px-8">
         <h1 className="text-2xl font-extrabold">Tu carrito</h1>
         <p className="text-base-content/60 mt-1 text-sm">
-          {lines.length === 0
-            ? "No hay productos todavía"
-            : `${lines.reduce((count, { item }) => count + item.quantity, 0)} items`}
+          {!hydrated
+            ? "Cargando carrito"
+            : items.length === 0
+              ? "No hay productos todavía"
+              : `${items.reduce((count, item) => count + item.quantity, 0)} ítems`}
         </p>
 
-        {isLoading ? (
-          <LoadingSpinner label="Cargando productos del carrito" />
-        ) : isError ? (
-          <NotificationToast
-            type="error"
-            message="No se pudieron cargar los libros del carrito."
-            className="mx-auto my-10 w-full max-w-xl"
-          />
+        {!hydrated ? (
+          <LoadingSpinner label="Cargando carrito" />
         ) : items.length === 0 ? (
           <div className="text-center">
             <p className="text-lg font-bold">Tu carrito está vacío</p>
@@ -64,14 +65,27 @@ export default function CarritoPage() {
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="flex flex-col gap-3">
+              {isLoading && <LoadingSpinner label="Cargando productos del carrito" />}
+              {isError && (
+                <div className="flex flex-col gap-2">
+                  <NotificationToast
+                    type="error"
+                    message="No se pudieron cargar algunos libros del carrito."
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm self-start"
+                    onClick={() => void refetchBooks()}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
               {missingItems.map((item) => (
-                <div
-                  key={item.bookId}
-                  className="card bg-base-100 card-border"
-                >
+                <div key={item.bookId} className="card bg-base-100 card-border">
                   <div className="card-body flex-row items-center justify-between">
                     <p className="text-sm">
-                      El libro {item.bookId} ya no está disponible.
+                      Uno de los libros ya no está disponible. Quitarlo del carrito.
                     </p>
                     <button
                       type="button"
@@ -92,9 +106,7 @@ export default function CarritoPage() {
                   unitPrice={book.price}
                   quantity={item.quantity}
                   href={`/book/${book.id}`}
-                  onQuantityChange={(quantity) =>
-                    setQuantity(item.bookId, quantity)
-                  }
+                  onQuantityChange={(quantity) => setQuantity(item.bookId, quantity)}
                   onRemove={() => remove(item.bookId)}
                 />
               ))}

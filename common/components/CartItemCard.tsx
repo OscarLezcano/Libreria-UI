@@ -1,6 +1,8 @@
 "use client";
 
-import { Minus, Plus, Trash2 } from "lucide-react";
+import QuantitySelector from "@/common/components/QuantitySelector";
+import { formatGs } from "@/common/utils/format";
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
 
 interface CartItemCardProps {
@@ -14,9 +16,6 @@ interface CartItemCardProps {
   onRemove: () => void;
 }
 
-const formatGs = (value: number) =>
-  new Intl.NumberFormat("es-PY").format(value);
-
 export default function CartItemCard({
   coverSrc,
   title,
@@ -29,7 +28,7 @@ export default function CartItemCard({
 }: CartItemCardProps) {
   return (
     <div className="card bg-base-100 card-border">
-      <div className="card-body card-side items-center gap-4 p-4">
+      <div className="card-body items-start gap-4 p-4 sm:card-side sm:items-center">
         <Link href={href} aria-label={title} className="shrink-0">
           <img
             src={coverSrc}
@@ -48,32 +47,11 @@ export default function CartItemCard({
               : `${formatGs(unitPrice)} Gs por unidad`}
           </p>
         </div>
-        <div className="join shrink-0">
-          <button
-            className="btn btn-neutral join-item btn-sm"
-            aria-label={`Quitar una unidad de ${title}`}
-            onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
-          >
-            <Minus className="size-3" strokeWidth={2.5} />
-          </button>
-          <input
-            type="number"
-            min={1}
-            value={quantity}
-            aria-label={`Cantidad de ${title}`}
-            onChange={(e) =>
-              onQuantityChange(Math.max(1, Number(e.target.value) || 1))
-            }
-            className="input input-sm join-item w-14 text-center"
-          />
-          <button
-            className="btn btn-neutral join-item btn-sm"
-            aria-label={`Agregar una unidad de ${title}`}
-            onClick={() => onQuantityChange(quantity + 1)}
-          >
-            <Plus className="size-3" strokeWidth={2.5} />
-          </button>
-        </div>
+        <QuantitySelector
+          value={quantity}
+          onChange={onQuantityChange}
+          label={`Cantidad de ${title}`}
+        />
         <div className="w-28 shrink-0 text-right">
           <p className="text-sm font-extrabold">
             {unitPrice === null
