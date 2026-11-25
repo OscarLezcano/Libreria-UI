@@ -1,24 +1,27 @@
+"use client";
+
+import LoadingSpinner from "@/common/components/LoadingSpinner";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import MisComprasContent from "./MisComprasContent";
-
-interface MisComprasPageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
-function firstValue(value: string | string[] | undefined): string {
-  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
-}
 
 function parsePage(value: string): number {
   const parsed = Number.parseInt(value, 10);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
-export default async function MisComprasPage({
-  searchParams,
-}: MisComprasPageProps) {
-  const params = await searchParams;
-  const page = parsePage(firstValue(params.page));
-  const search = firstValue(params.search).trim().slice(0, 100);
+function MisComprasPageContent() {
+  const searchParams = useSearchParams();
+  const page = parsePage(searchParams.get("page") ?? "");
+  const search = (searchParams.get("search") ?? "").trim().slice(0, 100);
 
   return <MisComprasContent page={page} search={search} />;
+}
+
+export default function MisComprasPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner label="Cargando compras" />}>
+      <MisComprasPageContent />
+    </Suspense>
+  );
 }
