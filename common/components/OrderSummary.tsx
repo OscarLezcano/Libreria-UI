@@ -38,7 +38,7 @@ export default function OrderSummary({
 
         <div className="border-t border-base-300 py-3">
           <label className="text-sm font-bold" htmlFor="coupon-input">
-            Cupón de descuento (opcional)
+            Escribe tu cupón
           </label>
           <div className="mt-2 flex gap-2">
             <input
@@ -49,7 +49,7 @@ export default function OrderSummary({
                 setCouponCode(e.target.value);
                 setError(null);
               }}
-              placeholder="Escribí tu cupón"
+              placeholder="Ingresa tu cupón"
               className="input input-sm flex-1 uppercase"
               aria-describedby="coupon-validation-note"
             />
