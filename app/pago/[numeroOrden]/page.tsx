@@ -66,6 +66,10 @@ export default function PagarPedidoPage() {
       void queryClient.invalidateQueries({
         queryKey: ["orders", "numero", paidOrder.numeroOrden],
       });
+      // El pago descuenta stock en el backend; refrescamos las vistas de
+      // inventario/catalogo para que el vendedor no siga viendo cache vieja.
+      void queryClient.invalidateQueries({ queryKey: ["stocks", "warehouse"] });
+      void queryClient.invalidateQueries({ queryKey: ["books", "catalog"] });
       router.replace(`/pedidos/${paidOrder.numeroOrden}`);
     },
     [clear, clearCheckout, queryClient, router]

@@ -7,11 +7,12 @@ import { withWarehouseContext } from "@/common/utils/warehouseScope";
 import { useSearchParams } from "next/navigation";
 
 const SELLER_MENU = [
-  { key: "inicio", label: "Inicio", href: "/" },
   { key: "catalogo", label: "Catálogo", href: "/vendedor/libros" },
   { key: "inventario", label: "Inventario", href: "/vendedor/inventario" },
   { key: "compras", label: "Compras", href: "/vendedor/compras" },
   { key: "proveedores", label: "Proveedores", href: "/vendedor/proveedores" },
+  { key: "cupones", label: "Cupones", href: "/vendedor/cupones" },
+  { key: "reportes", label: "Reportes", href: "/vendedor/reportes" },
 ] as const;
 
 export default function SellerNavbar() {
@@ -32,7 +33,8 @@ export default function SellerNavbar() {
   const items = menuItems.map((item) => ({
     ...item,
     href:
-      item.key === "sucursales" || item.key === "inicio"
+      item.key === "sucursales" ||
+      item.key === "cupones"
         ? item.href
         : withWarehouseContext(item.href, warehouseParam),
   }));

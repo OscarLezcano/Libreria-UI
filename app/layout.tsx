@@ -6,8 +6,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="es"
       data-theme="light"
+      suppressHydrationWarning
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('bb-theme');if(t==='light'||t==='dark'||t==='valentine'||t==='emerald'||t==='corporate'||t==='dracula'){document.documentElement.dataset.theme=t;}}catch(e){}})();",
+          }}
+        />
         <link rel="icon" href="/icons/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />

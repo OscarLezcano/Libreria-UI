@@ -3,8 +3,8 @@
 import SiteNavbar from "@/common/components/SiteNavbar";
 
 const ADMIN_MENU = [
-  { key: "inicio", label: "Inicio", href: "/" },
   { key: "sucursales", label: "Sucursales", href: "/admin/sucursales" },
+  { key: "usuarios", label: "Usuarios", href: "/admin/usuarios" },
 ] as const;
 
 export default function AdminNavbar() {

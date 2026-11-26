@@ -3,25 +3,50 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { AUTH_CHANGED_EVENT, useCart } from "@/common/context/CartContext";
-import { LayoutDashboard, LogOut, Store, User } from "lucide-react";
+import { LayoutDashboard, LogIn, LogOut, Store, User, UserPlus, BookOpen, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-function getShowAdminLink() {
+function getUserRoles(): string[] {
   const storedUser = localStorage.getItem("bigbooks.user");
-  if (!storedUser) return false;
+  if (!storedUser) return [];
 
   try {
     const user: unknown = JSON.parse(storedUser);
-    if (!user || typeof user !== "object") return false;
+    if (!user || typeof user !== "object") return [];
 
-    const { roleNames } = user as {
-      roleNames?: unknown;
-    };
-    return Array.isArray(roleNames) && roleNames.includes("ADMIN");
+    const { roleNames } = user as { roleNames?: unknown };
+    if (!Array.isArray(roleNames)) return [];
+    return roleNames.flatMap((role) =>
+      typeof role === "string" ? [role.trim().toUpperCase()] : []
+    );
   } catch {
-    return false;
+    return [];
   }
+}
+
+function hasStoredUser() {
+  return localStorage.getItem("bigbooks.user") !== null;
+}
+
+function getShowAdminLink() {
+  return getUserRoles().includes("ADMIN");
+}
+
+function getShowSellerLink() {
+  return getUserRoles().some(
+    (role) =>
+      role === "ADMIN" ||
+      role === "SELLER" ||
+      role === "SALLER" ||
+      role === "VENDEDOR"
+  );
+}
+
+// Un usuario que solo es CLIENT no debe ver "Panel Cliente": ya está en él.
+// Los usuarios con otros roles sí pueden volver al area de cliente desde Perfil.
+function getShowClientLink() {
+  return getUserRoles().some((role) => role !== "CLIENT");
 }
 
 function subscribeToUserStorage(onChange: () => void) {
@@ -37,9 +62,24 @@ export default function UserMenu() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { clear } = useCart();
+  const isLoggedIn = useSyncExternalStore(
+    subscribeToUserStorage,
+    hasStoredUser,
+    () => false
+  );
   const showAdminLink = useSyncExternalStore(
     subscribeToUserStorage,
     getShowAdminLink,
+    () => false
+  );
+  const showSellerLink = useSyncExternalStore(
+    subscribeToUserStorage,
+    getShowSellerLink,
+    () => false
+  );
+  const showClientLink = useSyncExternalStore(
+    subscribeToUserStorage,
+    getShowClientLink,
     () => false
   );
 
@@ -67,27 +107,66 @@ export default function UserMenu() {
           </div>
         </div>
       </summary>
-      <ul className="menu dropdown-content z-50 mt-2 w-40 rounded-box bg-base-100 p-2 shadow-[0_0_16px_rgba(0,0,0,0.16)]">
-        {showAdminLink && (
-          <li>
-            <Link href="/admin/sucursales">
-              <LayoutDashboard className="size-4" strokeWidth={2} />
-              Panel Admin
-            </Link>
-          </li>
+      <ul className="menu dropdown-content z-50 mt-2 w-48 rounded-box bg-base-100 p-2 shadow-[0_0_16px_rgba(0,0,0,0.16)]">
+        {isLoggedIn ? (
+          <>
+            {showAdminLink && (
+              <li>
+                <Link href="/admin/sucursales">
+                  <LayoutDashboard className="size-4" strokeWidth={2} />
+                  Panel Admin
+                </Link>
+              </li>
+            )}
+            {showSellerLink && (
+              <li>
+                <Link href="/vendedor/libros">
+                  <Store className="size-4" strokeWidth={2} />
+                  Panel Vendedor
+                </Link>
+              </li>
+            )}
+            {showClientLink && (
+              <li>
+                <Link href="/">
+                  <BookOpen className="size-4" strokeWidth={2} />
+                  Panel Cliente
+                </Link>
+              </li>
+            )}
+            <li>
+              <Link
+                href={
+                  showSellerLink ? "/vendedor/configuracion" : "/perfil/configuracion"
+                }
+              >
+                <Settings className="size-4" strokeWidth={2} />
+                Configuración
+              </Link>
+            </li>
+            <li>
+              <button type="button" onClick={logout} className="text-error">
+                <LogOut className="size-4 text-error" strokeWidth={2} />
+                Logout
+              </button>
+            </li>
+          </>
+        ) : (
+          <>
+            <li>
+              <Link href="/auth/login">
+                <LogIn className="size-4" strokeWidth={2} />
+                Iniciar sesión
+              </Link>
+            </li>
+            <li>
+              <Link href="/auth/register">
+                <UserPlus className="size-4" strokeWidth={2} />
+                Crear cuenta
+              </Link>
+            </li>
+          </>
         )}
-        <li>
-          <Link href="/vendedor/libros">
-            <Store className="size-4" strokeWidth={2} />
-            Panel Vendedor
-          </Link>
-        </li>
-        <li>
-          <button type="button" onClick={logout} className="text-error">
-            <LogOut className="size-4 text-error" strokeWidth={2} />
-            Logout
-          </button>
-        </li>
       </ul>
     </details>
   );
