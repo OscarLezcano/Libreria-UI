@@ -9,21 +9,42 @@ import { getOrderStatusMeta } from "@/common/data/orders";
 import { getMyOrders } from "@/common/services/sales";
 import { formatGs } from "@/common/utils/format";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, ListFilter, Search } from "lucide-react";
 import Link from "next/link";
 
 const PAGE_SIZE = 10;
 
+export interface MisComprasFilters {
+  minTotal: string;
+  maxTotal: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
 interface MisComprasContentProps {
   page: number;
   search: string;
+  filters: MisComprasFilters;
 }
 
-function buildHref(targetPage: number, search: string): string {
+function buildHref(
+  targetPage: number,
+  search: string,
+  filters: MisComprasFilters
+): string {
   const params = new URLSearchParams();
   if (targetPage > 1) params.set("page", String(targetPage));
   if (search) params.set("search", search);
+  if (filters.minTotal) params.set("minTotal", filters.minTotal);
+  if (filters.maxTotal) params.set("maxTotal", filters.maxTotal);
+  if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.set("dateTo", filters.dateTo);
   const query = params.toString();
   return `/mis-compras${query ? `?${query}` : ""}`;
+}
+
+function optionalAmount(value: string): number | undefined {
+  return value ? Number(value) : undefined;
 }
 
 function formatDate(value: string | null): string {
@@ -35,15 +56,41 @@ function formatDate(value: string | null): string {
 export default function MisComprasContent({
   page,
   search,
+  filters,
 }: MisComprasContentProps) {
   const ordersQuery = useQuery({
-    queryKey: ["orders", "mine", page, search],
-    queryFn: () => getMyOrders(page, PAGE_SIZE, search),
+    queryKey: [
+      "orders",
+      "mine",
+      page,
+      search,
+      filters.minTotal,
+      filters.maxTotal,
+      filters.dateFrom,
+      filters.dateTo,
+    ],
+    queryFn: () =>
+      getMyOrders(page, PAGE_SIZE, search, {
+        minTotal: optionalAmount(filters.minTotal),
+        maxTotal: optionalAmount(filters.maxTotal),
+        createdFrom: filters.dateFrom
+          ? `${filters.dateFrom}T00:00:00`
+          : undefined,
+        createdTo: filters.dateTo
+          ? `${filters.dateTo}T23:59:59.999999999`
+          : undefined,
+      }),
     staleTime: 30_000,
   });
   const orders = ordersQuery.data?.orders ?? [];
   const totalPages = ordersQuery.data?.totalPages ?? 1;
   const totalElements = ordersQuery.data?.totalElements ?? 0;
+  const activeFilterCount = [
+    filters.minTotal,
+    filters.maxTotal,
+    filters.dateFrom,
+    filters.dateTo,
+  ].filter(Boolean).length;
 
   return (
     <main className="bg-base-100 flex min-h-dvh flex-col">
@@ -68,33 +115,134 @@ export default function MisComprasContent({
               )}
             </div>
 
-            <form
-              action="/mis-compras"
-              method="get"
-              className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <label className="input input-bordered flex w-full max-w-md items-center gap-2">
-                <span className="text-base-content/50 text-sm">Buscar</span>
-                <input
-                  type="search"
-                  name="search"
-                  defaultValue={search}
-                  className="grow"
-                  placeholder="Pedido o factura"
-                  aria-label="Buscar pedido o factura"
-                />
-              </label>
-              <div className="flex gap-2 self-start sm:self-auto">
-                <button type="submit" className="btn btn-outline btn-sm">
-                  Buscar
-                </button>
+            <div className="mb-5 flex flex-wrap items-start gap-2">
+              <form
+                action="/mis-compras"
+                method="get"
+                className="flex w-full max-w-md min-w-[240px] flex-1 items-center gap-2"
+              >
+                {filters.minTotal && (
+                  <input type="hidden" name="minTotal" value={filters.minTotal} />
+                )}
+                {filters.maxTotal && (
+                  <input type="hidden" name="maxTotal" value={filters.maxTotal} />
+                )}
+                {filters.dateFrom && (
+                  <input type="hidden" name="dateFrom" value={filters.dateFrom} />
+                )}
+                {filters.dateTo && (
+                  <input type="hidden" name="dateTo" value={filters.dateTo} />
+                )}
+                <label className="input input-bordered flex min-w-0 flex-1 items-center gap-1 pr-1">
+                  <input
+                    type="search"
+                    name="search"
+                    defaultValue={search}
+                    className="min-w-0 grow"
+                    placeholder="Pedido o factura"
+                    aria-label="Buscar pedido o factura"
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-ghost btn-sm btn-circle shrink-0"
+                    aria-label="Buscar"
+                    title="Buscar"
+                  >
+                    <Search className="size-4" strokeWidth={2} />
+                  </button>
+                </label>
                 {search && (
-                  <Link href="/mis-compras" className="btn btn-ghost btn-sm">
+                  <Link
+                    href={buildHref(1, "", filters)}
+                    className="btn btn-ghost btn-sm shrink-0"
+                  >
                     Limpiar
                   </Link>
                 )}
-              </div>
-            </form>
+              </form>
+
+              <details className="dropdown shrink-0">
+                <summary className="btn btn-outline btn-sm flex cursor-pointer list-none items-center gap-2">
+                  <ListFilter className="size-4" strokeWidth={2} />
+                  Filtros
+                  {activeFilterCount > 0 && (
+                    <span className="badge badge-sm badge-ghost">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                  <ChevronDown className="size-4" strokeWidth={2} aria-hidden="true" />
+                </summary>
+                <form
+                  action="/mis-compras"
+                  method="get"
+                  className="dropdown-content z-30 mt-2 w-[min(85vw,30rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
+                >
+                  {search && <input type="hidden" name="search" value={search} />}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="form-control w-full">
+                      <span className="label-text mb-1 text-xs">Total mínimo (Gs)</span>
+                      <input
+                        type="number"
+                        name="minTotal"
+                        min="0"
+                        step="1"
+                        defaultValue={filters.minTotal}
+                        placeholder="Sin mínimo"
+                        className="input input-bordered input-sm w-full"
+                      />
+                    </label>
+                    <label className="form-control w-full">
+                      <span className="label-text mb-1 text-xs">Total máximo (Gs)</span>
+                      <input
+                        type="number"
+                        name="maxTotal"
+                        min="0"
+                        step="1"
+                        defaultValue={filters.maxTotal}
+                        placeholder="Sin máximo"
+                        className="input input-bordered input-sm w-full"
+                      />
+                    </label>
+                    <label className="form-control w-full">
+                      <span className="label-text mb-1 text-xs">Fecha desde</span>
+                      <input
+                        type="date"
+                        name="dateFrom"
+                        defaultValue={filters.dateFrom}
+                        className="input input-bordered input-sm w-full"
+                      />
+                    </label>
+                    <label className="form-control w-full">
+                      <span className="label-text mb-1 text-xs">Fecha hasta</span>
+                      <input
+                        type="date"
+                        name="dateTo"
+                        defaultValue={filters.dateTo}
+                        className="input input-bordered input-sm w-full"
+                      />
+                    </label>
+                  </div>
+                  <div className="mt-3 flex justify-end gap-2">
+                    {activeFilterCount > 0 && (
+                      <Link
+                        href={buildHref(1, search, {
+                          minTotal: "",
+                          maxTotal: "",
+                          dateFrom: "",
+                          dateTo: "",
+                        })}
+                        className="btn btn-ghost btn-sm"
+                      >
+                        Limpiar filtros
+                      </Link>
+                    )}
+                    <button type="submit" className="btn btn-primary btn-sm">
+                      Aplicar filtros
+                    </button>
+                  </div>
+                </form>
+              </details>
+            </div>
 
             <div className="overflow-x-auto flex-1">
               <table className="table table-md w-full min-w-[860px]">
@@ -213,7 +361,7 @@ export default function MisComprasContent({
             <Pagination
               page={page}
               totalPages={totalPages}
-              getHref={(targetPage) => buildHref(targetPage, search)}
+              getHref={(targetPage) => buildHref(targetPage, search, filters)}
             />
           </div>
         </section>

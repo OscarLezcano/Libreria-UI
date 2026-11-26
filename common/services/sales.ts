@@ -252,10 +252,18 @@ export async function createOrderRequest(
   return parseOrder(result?.data ?? result);
 }
 
+export interface MyOrdersFilters {
+  minTotal?: number;
+  maxTotal?: number;
+  createdFrom?: string;
+  createdTo?: string;
+}
+
 export async function getMyOrders(
   page = 1,
   size = 10,
-  search = ""
+  search = "",
+  filters: MyOrdersFilters = {}
 ): Promise<OrderPage> {
   const currentPage = Math.max(1, Math.floor(page));
   const pageSize = Math.max(1, Math.floor(size));
@@ -265,6 +273,14 @@ export async function getMyOrders(
     sort: "createdAt,desc",
   });
   if (search.trim()) query.set("search", search.trim());
+  if (filters.minTotal !== undefined) {
+    query.set("minTotal", String(filters.minTotal));
+  }
+  if (filters.maxTotal !== undefined) {
+    query.set("maxTotal", String(filters.maxTotal));
+  }
+  if (filters.createdFrom) query.set("createdFrom", filters.createdFrom);
+  if (filters.createdTo) query.set("createdTo", filters.createdTo);
   const response = await fetchSales(`sales/orders/mine?${query.toString()}`);
   if (!response.ok) {
     return responseError(response, "No se pudieron cargar tus compras. Intentá nuevamente.");
