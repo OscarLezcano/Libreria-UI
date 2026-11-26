@@ -8,5 +8,5 @@ const ADMIN_MENU = [
 ] as const;
 
 export default function AdminNavbar() {
-  return <SiteNavbar items={ADMIN_MENU} />;
+  return <SiteNavbar items={ADMIN_MENU} showCart={false} />;
 }

@@ -253,6 +253,7 @@ export async function createOrderRequest(
 }
 
 export interface MyOrdersFilters {
+  sort?: string;
   minTotal?: number;
   maxTotal?: number;
   createdFrom?: string;
@@ -270,7 +271,7 @@ export async function getMyOrders(
   const query = new URLSearchParams({
     page: String(currentPage - 1),
     size: String(pageSize),
-    sort: "createdAt,desc",
+    sort: filters.sort ?? "createdAt,desc",
   });
   if (search.trim()) query.set("search", search.trim());
   if (filters.minTotal !== undefined) {

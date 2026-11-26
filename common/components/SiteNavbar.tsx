@@ -1,5 +1,6 @@
 "use client";
 
+import ThemeToggle from "@/common/components/ThemeToggle";
 import UserMenu from "@/common/components/UserMenu";
 import { useCart } from "@/common/context/CartContext";
 import { ShoppingCart } from "lucide-react";
@@ -15,9 +16,14 @@ export interface NavbarItem {
 interface SiteNavbarProps {
   items: readonly NavbarItem[];
   active?: string;
+  showCart?: boolean;
 }
 
-export default function SiteNavbar({ items, active }: SiteNavbarProps) {
+export default function SiteNavbar({
+  items,
+  active,
+  showCart = true,
+}: SiteNavbarProps) {
   const pathname = usePathname();
   const { count, hydrated } = useCart();
   const activeKey =
@@ -61,20 +67,23 @@ export default function SiteNavbar({ items, active }: SiteNavbarProps) {
           </ul>
         </nav>
         <div className="navbar-end gap-2">
-          <div className="indicator">
-            {hydrated && count > 0 && (
-              <span className="badge badge-primary indicator-item badge-xs">
-                {count}
-              </span>
-            )}
-            <Link
-              href="/carrito"
-              className="btn btn-ghost btn-circle"
-              aria-label="Carrito"
-            >
-              <ShoppingCart className="size-5" strokeWidth={2} />
-            </Link>
-          </div>
+          <ThemeToggle />
+          {showCart && (
+            <div className="indicator">
+              {hydrated && count > 0 && (
+                <span className="badge badge-primary indicator-item badge-xs">
+                  {count}
+                </span>
+              )}
+              <Link
+                href="/carrito"
+                className="btn btn-ghost btn-circle"
+                aria-label="Carrito"
+              >
+                <ShoppingCart className="size-5" strokeWidth={2} />
+              </Link>
+            </div>
+          )}
           <UserMenu />
         </div>
       </div>

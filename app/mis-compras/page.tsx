@@ -5,9 +5,23 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import MisComprasContent from "./MisComprasContent";
 
+const DEFAULT_SORT = "createdAt,desc";
+const ALLOWED_SORTS = new Set([
+  "numeroOrden,asc",
+  "numeroOrden,desc",
+  "createdAt,asc",
+  "createdAt,desc",
+  "totalPrice,asc",
+  "totalPrice,desc",
+]);
+
 function parsePage(value: string): number {
   const parsed = Number.parseInt(value, 10);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function parseSort(value: string): string {
+  return ALLOWED_SORTS.has(value) ? value : DEFAULT_SORT;
 }
 
 function parseAmount(value: string): string {
@@ -31,6 +45,7 @@ function MisComprasPageContent() {
   const searchParams = useSearchParams();
   const page = parsePage(searchParams.get("page") ?? "");
   const search = (searchParams.get("search") ?? "").trim().slice(0, 100);
+  const sort = parseSort(searchParams.get("sort") ?? "");
   let minTotal = parseAmount(searchParams.get("minTotal") ?? "");
   let maxTotal = parseAmount(searchParams.get("maxTotal") ?? "");
   let dateFrom = parseDate(searchParams.get("dateFrom") ?? "");
@@ -47,7 +62,7 @@ function MisComprasPageContent() {
     <MisComprasContent
       page={page}
       search={search}
-      filters={{ minTotal, maxTotal, dateFrom, dateTo }}
+      filters={{ sort, minTotal, maxTotal, dateFrom, dateTo }}
     />
   );
 }
