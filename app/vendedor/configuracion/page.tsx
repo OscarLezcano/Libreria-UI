@@ -1,8 +1,7 @@
 "use client";
 
 import ProfileSettingsContent from "@/common/components/ProfileSettingsContent";
-import Link from "next/link";
-import { BadgePercent, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 
 export default function SellerSettingsPage() {
   return (
@@ -17,16 +16,6 @@ export default function SellerSettingsPage() {
             Preferencias visuales y accesos rápidos del panel vendedor.
           </p>
         </div>
-      </div>
-
-      <div className="mb-6 flex flex-wrap gap-3">
-        <Link href="/vendedor/cupones/nuevo" className="btn btn-primary">
-          <BadgePercent className="size-4" strokeWidth={2} />
-          Crear cupón
-        </Link>
-        <Link href="/vendedor/cupones" className="btn btn-outline">
-          Ver cupones
-        </Link>
       </div>
 
       <ProfileSettingsContent />

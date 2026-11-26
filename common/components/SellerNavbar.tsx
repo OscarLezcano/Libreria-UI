@@ -12,6 +12,7 @@ const SELLER_MENU = [
   { key: "compras", label: "Compras", href: "/vendedor/compras" },
   { key: "proveedores", label: "Proveedores", href: "/vendedor/proveedores" },
   { key: "cupones", label: "Cupones", href: "/vendedor/cupones" },
+  { key: "crear-cupon", label: "Crear cupón", href: "/vendedor/cupones/nuevo" },
   { key: "reportes", label: "Reportes", href: "/vendedor/reportes" },
 ] as const;
 
@@ -34,7 +35,8 @@ export default function SellerNavbar() {
     ...item,
     href:
       item.key === "sucursales" ||
-      item.key === "cupones"
+      item.key === "cupones" ||
+      item.key === "crear-cupon"
         ? item.href
         : withWarehouseContext(item.href, warehouseParam),
   }));

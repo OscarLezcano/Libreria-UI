@@ -1,6 +1,5 @@
 "use client";
 
-import ThemeToggle from "@/common/components/ThemeToggle";
 import UserMenu from "@/common/components/UserMenu";
 import { useCart } from "@/common/context/CartContext";
 import { ShoppingCart } from "lucide-react";
@@ -62,7 +61,6 @@ export default function SiteNavbar({ items, active }: SiteNavbarProps) {
           </ul>
         </nav>
         <div className="navbar-end gap-2">
-          <ThemeToggle />
           <div className="indicator">
             {hydrated && count > 0 && (
               <span className="badge badge-primary indicator-item badge-xs">
