@@ -1,4 +1,4 @@
-import { apiFetch, apiUrl, getAuthHeaders } from "@/common/services/http";
+import { apiUrl, getAuthHeaders } from "@/common/services/http";
 
 export const NUMERO_ORDEN_PATTERN = /^\d{8}$/;
 
@@ -222,7 +222,7 @@ async function fetchSales(path: string, init: RequestInit = {}): Promise<Respons
   requestHeaders.forEach((value, key) => headers.set(key, value));
   let response: Response;
   try {
-    response = await apiFetch(apiUrl(path), {
+    response = await fetch(apiUrl(path), {
       ...init,
       headers,
       credentials: "include",
@@ -252,36 +252,19 @@ export async function createOrderRequest(
   return parseOrder(result?.data ?? result);
 }
 
-export interface MyOrdersFilters {
-  sort?: string;
-  minTotal?: number;
-  maxTotal?: number;
-  createdFrom?: string;
-  createdTo?: string;
-}
-
 export async function getMyOrders(
   page = 1,
   size = 10,
-  search = "",
-  filters: MyOrdersFilters = {}
+  search = ""
 ): Promise<OrderPage> {
   const currentPage = Math.max(1, Math.floor(page));
   const pageSize = Math.max(1, Math.floor(size));
   const query = new URLSearchParams({
     page: String(currentPage - 1),
     size: String(pageSize),
-    sort: filters.sort ?? "createdAt,desc",
+    sort: "createdAt,desc",
   });
   if (search.trim()) query.set("search", search.trim());
-  if (filters.minTotal !== undefined) {
-    query.set("minTotal", String(filters.minTotal));
-  }
-  if (filters.maxTotal !== undefined) {
-    query.set("maxTotal", String(filters.maxTotal));
-  }
-  if (filters.createdFrom) query.set("createdFrom", filters.createdFrom);
-  if (filters.createdTo) query.set("createdTo", filters.createdTo);
   const response = await fetchSales(`sales/orders/mine?${query.toString()}`);
   if (!response.ok) {
     return responseError(response, "No se pudieron cargar tus compras. Intentá nuevamente.");

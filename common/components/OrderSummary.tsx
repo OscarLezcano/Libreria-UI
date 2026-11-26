@@ -38,7 +38,7 @@ export default function OrderSummary({
 
         <div className="border-t border-base-300 py-3">
           <label className="text-sm font-bold" htmlFor="coupon-input">
-            Escribe tu cupón
+            Cupón de descuento (opcional)
           </label>
           <div className="mt-2 flex gap-2">
             <input
@@ -49,8 +49,9 @@ export default function OrderSummary({
                 setCouponCode(e.target.value);
                 setError(null);
               }}
-              placeholder="Ingresa tu cupón"
+              placeholder="Escribí tu cupón"
               className="input input-sm flex-1 uppercase"
+              aria-describedby="coupon-validation-note"
             />
             <button
               type="button"
@@ -76,21 +77,14 @@ export default function OrderSummary({
               </button>
             </div>
           )}
+          <p id="coupon-validation-note" className="text-base-content/60 mt-2 text-xs">
+            El descuento y el total final se validan al crear el pedido.
+          </p>
         </div>
 
-        <div className="space-y-2 border-t border-base-300 py-4 text-sm">
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-base-content/60">Subtotal</span>
-            <span className="font-semibold">{formatGs(subtotal)} Gs</span>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-base-content/60">Descuentos</span>
-            <span className="font-semibold text-success">0 Gs</span>
-          </div>
-          <div className="flex items-center justify-between gap-4 border-t border-base-300 pt-3 text-base font-extrabold">
-            <span>Total</span>
-            <span>{formatGs(subtotal)} Gs</span>
-          </div>
+        <div className="flex justify-between border-t border-base-300 py-3 text-base font-extrabold">
+          <span>Subtotal</span>
+          <span>{formatGs(subtotal)} Gs</span>
         </div>
         <Link
           href="/checkout"

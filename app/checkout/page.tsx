@@ -132,7 +132,7 @@ export default function CheckoutPage() {
 
     if (session.numeroOrden) {
       setCheckout(nextShipping, nextBilling);
-      router.push(`/pago/?numeroOrden=${session.numeroOrden}`);
+      router.push(`/pago?numero=${encodeURIComponent(session.numeroOrden)}`);
       return;
     }
 
@@ -142,7 +142,7 @@ export default function CheckoutPage() {
       session.numeroOrden = order.numeroOrden;
       saveSession(session);
       setCheckout(nextShipping, nextBilling);
-      router.push(`/pago/?numeroOrden=${order.numeroOrden}`);
+      router.push(`/pago?numero=${encodeURIComponent(order.numeroOrden)}`);
     } catch (caught) {
       setError(
         caught instanceof Error

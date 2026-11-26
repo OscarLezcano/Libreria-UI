@@ -4,7 +4,7 @@ export interface OrderStatusMeta {
 }
 
 const STATUS_META: Record<string, OrderStatusMeta> = {
-  PENDING: { label: "Pendiente", badge: "badge-warning" },
+  PENDING: { label: "Pendiente de pago", badge: "badge-warning" },
   PAID: { label: "Pagado", badge: "badge-info" },
   APPROVED: { label: "Aprobado", badge: "badge-success" },
   COMPLETED: { label: "Completado", badge: "badge-success" },

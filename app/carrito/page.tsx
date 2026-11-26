@@ -105,7 +105,7 @@ export default function CarritoPage() {
                   authors={book.authors}
                   unitPrice={book.price}
                   quantity={item.quantity}
-                  href={`/book/?id=${book.id}`}
+                  href={`/book?id=${encodeURIComponent(book.id)}`}
                   onQuantityChange={(quantity) => setQuantity(item.bookId, quantity)}
                   onRemove={() => remove(item.bookId)}
                 />
