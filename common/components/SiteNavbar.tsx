@@ -1,5 +1,6 @@
 "use client";
 
+import ThemeToggle from "@/common/components/ThemeToggle";
 import UserMenu from "@/common/components/UserMenu";
 import { useCart } from "@/common/context/CartContext";
 import { ShoppingCart } from "lucide-react";
@@ -19,7 +20,7 @@ interface SiteNavbarProps {
 
 export default function SiteNavbar({ items, active }: SiteNavbarProps) {
   const pathname = usePathname();
-  const { count } = useCart();
+  const { count, hydrated } = useCart();
   const activeKey =
     active ??
     items.find((item) => {
@@ -61,8 +62,9 @@ export default function SiteNavbar({ items, active }: SiteNavbarProps) {
           </ul>
         </nav>
         <div className="navbar-end gap-2">
+          <ThemeToggle />
           <div className="indicator">
-            {count > 0 && (
+            {hydrated && count > 0 && (
               <span className="badge badge-primary indicator-item badge-xs">
                 {count}
               </span>
@@ -78,6 +80,28 @@ export default function SiteNavbar({ items, active }: SiteNavbarProps) {
           <UserMenu />
         </div>
       </div>
+      <nav
+        className="border-t border-base-200 px-2 py-1 lg:hidden"
+        aria-label="Navegación principal compacta"
+      >
+        <ul className="menu menu-horizontal w-full flex-nowrap justify-between gap-1 px-0 sm:justify-center sm:gap-4 md:gap-6">
+          {items.map((item) => (
+            <li key={item.key}>
+              <Link
+                href={item.href}
+                aria-current={item.key === activeKey ? "page" : undefined}
+                className={
+                  item.key === activeKey
+                    ? "whitespace-nowrap px-2 text-xs font-bold uppercase tracking-wider text-base-content sm:px-3 sm:text-sm"
+                    : "whitespace-nowrap px-2 text-xs font-semibold uppercase tracking-wider text-base-content/60 hover:text-base-content sm:px-3 sm:text-sm"
+                }
+              >
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </header>
   );
 }

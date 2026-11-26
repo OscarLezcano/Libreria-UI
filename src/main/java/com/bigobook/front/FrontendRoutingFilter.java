@@ -87,6 +87,7 @@ public final class FrontendRoutingFilter implements Filter {
                 || isPathOrChild(path, "/pago")
                 || isPathOrChild(path, "/mis-compras")
                 || isPathOrChild(path, "/pedidos")
+                || isPathOrChild(path, "/perfil")
                 || isPathOrChild(path, "/admin")
                 || isPathOrChild(path, "/vendedor");
     }

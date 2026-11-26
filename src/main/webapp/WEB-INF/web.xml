@@ -3,6 +3,22 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_1.xsd"
          version="6.1">
+  <!-- Necesario para que Tomcat replique sesiones en el cluster ui1/ui2. -->
+  <distributable/>
+
+  <servlet>
+    <servlet-name>nodeProbeServlet</servlet-name>
+    <servlet-class>com.bigobook.front.NodeProbeServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>nodeProbeServlet</servlet-name>
+    <url-pattern>/health</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>nodeProbeServlet</servlet-name>
+    <url-pattern>/session-probe</url-pattern>
+  </servlet-mapping>
+
   <filter>
     <filter-name>frontendRoutingFilter</filter-name>
     <filter-class>com.bigobook.front.FrontendRoutingFilter</filter-class>

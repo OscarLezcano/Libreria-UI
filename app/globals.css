@@ -1,4 +1,4 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: light --default, valentine;
+  themes: light --default, dark, valentine, emerald, corporate, dracula;
 }
